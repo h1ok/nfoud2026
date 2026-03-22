@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 async function getSportsNews(): Promise<News[]> {
   const { data, error } = await supabase
     .from('news')
-    .select('*, editors(name, position)')
+    .select('*', { count: 'exact' })
     .eq('category', 'sports')
     .order('created_at', { ascending: false })
     .limit(24);

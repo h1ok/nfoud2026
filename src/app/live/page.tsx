@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 async function getLiveEvents(): Promise<LiveEvent[]> {
   const { data, error } = await supabase
     .from('live_events')
-    .select('*, live_event_updates(count)')
-    .in('status', ['active', 'ended'])
+    .select('*')
+    .order('status', { ascending: true }) // active first
     .order('updated_at', { ascending: false })
     .limit(20);
 

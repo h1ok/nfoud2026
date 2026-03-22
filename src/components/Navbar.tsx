@@ -30,7 +30,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-primary text-primary-foreground sticky top-0 z-50 border-b border-gold/20 backdrop-blur-sm shadow-elegant">
+    <nav className="bg-primary text-primary-foreground sticky top-0 z-50 border-b border-gold/30 shadow-elegant">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
@@ -40,29 +40,29 @@ export default function Navbar() {
               alt="نفود" 
               width={48} 
               height={48}
-              className="h-10 w-10 md:h-12 md:w-12 transition-transform group-hover:scale-105" 
+              className="h-10 w-10 md:h-12 md:w-12 transition-transform group-hover:scale-105 drop-shadow-md" 
             />
             <div className="flex flex-col">
-              <span className="text-gold font-bold text-lg md:text-xl lg:text-2xl tracking-tight">شبكة نفود</span>
-              <span className="text-gold/80 text-xs md:text-sm font-light tracking-wide">الإخبارية</span>
+              <span className="text-gold font-black text-xl md:text-2xl lg:text-3xl tracking-tight">شبكة نفود</span>
+              <span className="text-gold/90 text-xs md:text-sm font-semibold tracking-wider">الإخبارية</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1 lg:gap-2">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 href={item.path}
-                className={`px-5 py-2.5 rounded-lg transition-all duration-300 font-medium text-base relative overflow-hidden group ${
+                className={`px-4 lg:px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-base lg:text-lg relative overflow-hidden group ${
                   pathname === item.path
-                    ? "bg-accent text-accent-foreground shadow-md"
-                    : "hover:bg-secondary/10 text-primary-foreground"
+                    ? "bg-gradient-to-r from-gold-dark to-gold text-accent-foreground shadow-lg"
+                    : "hover:bg-white/10 text-primary-foreground"
                 }`}
               >
                 <span className="relative z-10">{item.name}</span>
                 {pathname !== item.path && (
-                  <span className="absolute inset-0 bg-accent/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                  <span className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
                 )}
               </Link>
             ))}
@@ -94,10 +94,10 @@ export default function Navbar() {
                 key={item.path}
                 href={item.path}
                 onClick={() => setIsMenuOpen(false)}
-                className={`block px-5 py-3 rounded-lg transition-all duration-300 font-medium ${
+                className={`block px-5 py-3 rounded-xl transition-all duration-300 font-bold ${
                   pathname === item.path
-                    ? "bg-accent text-accent-foreground shadow-md"
-                    : "hover:bg-secondary/10 text-primary-foreground"
+                    ? "bg-gradient-to-r from-gold-dark to-gold text-accent-foreground shadow-md"
+                    : "hover:bg-white/10 text-primary-foreground"
                 }`}
               >
                 {item.name}

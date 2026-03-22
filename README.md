@@ -1,4 +1,4 @@
-# 🌐 شبكة نفود الإخبارية - Next.js
+# شبكة نفود الإخبارية - Next.js
 
 > موقع إخباري احترافي مبني بـ Next.js 16 مع App Router، SSR/ISR، وتحسينات SEO متقدمة
 
@@ -7,7 +7,21 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-2.75-3ecf8e)](https://supabase.com/)
 
-## ✨ المميزات
+## SEO Optimizations Applied
+
+This project includes comprehensive SEO and performance optimizations:
+- Image optimization (AVIF, WebP, lazy loading)
+- Core Web Vitals improvements
+- Enhanced internal linking with breadcrumbs
+- Structured data (Schema.org)
+- Comprehensive caching strategy
+- RSS feed and sitemap
+- PWA manifest
+- Security headers
+
+See `SEO_OPTIMIZATION_GUIDE.md` and `QUICK_START_SEO.md` for details.
+
+## المميزات
 
 ### 🚀 الأداء
 - **Server-Side Rendering (SSR)** للصفحات الديناميكية

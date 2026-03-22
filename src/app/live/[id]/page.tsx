@@ -4,36 +4,40 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { LiveEvent } from '@/types/news';
 import { formatDate, getCategoryLabel } from '@/lib/utils';
-import { SITE_URL, SITE_NAME } from '@/lib/constants';
+import { SITE_URL } from '@/lib/constants';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Radio, Clock } from 'lucide-react';
+import LiveEventUpdates from '@/components/LiveEventUpdates';
 
 export const revalidate = 30;
 
-interface LiveEventUpdate {
+interface LiveEventUpdateData {
   id: string;
   content: string;
   created_at: string;
-  update_type: string;
+  is_breaking?: boolean;
+  media_url?: string | null;
   source_news_id: string | null;
+  live_event_id: string;
 }
 
 async function getLiveEvent(id: string): Promise<LiveEvent | null> {
-  const { data, error } = await supabase
+  const { data: event, error: eventError } = await supabase
     .from('live_events')
     .select('*')
     .eq('id', id)
     .single();
 
-  if (error || !data) {
+  if (eventError || !event) {
+    console.error('Error fetching live event:', eventError);
     return null;
   }
 
-  return data;
+  return event;
 }
 
-async function getLiveEventUpdates(eventId: string): Promise<LiveEventUpdate[]> {
+async function getLiveEventUpdates(eventId: string): Promise<LiveEventUpdateData[]> {
   const { data, error } = await supabase
     .from('live_event_updates')
     .select('*')
@@ -86,13 +90,13 @@ export default async function LiveEventPage({ params }: { params: Promise<{ id: 
   const isActive = event.status === 'active';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      <main className="flex-1 container mx-auto px-4 py-12 max-w-5xl">
+        <div className="bg-card rounded-2xl shadow-elegant border border-border overflow-hidden">
           {event.main_image_url && (
-            <div className="relative w-full h-96">
+            <div className="relative w-full h-[400px]">
               <Image
                 src={event.main_image_url}
                 alt={event.title}
@@ -101,80 +105,70 @@ export default async function LiveEventPage({ params }: { params: Promise<{ id: 
                 priority
               />
               {isActive && (
-                <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-full flex items-center gap-2 font-semibold">
-                  <Radio className="w-5 h-5 animate-pulse" />
-                  <span>مباشر</span>
+                <div className="absolute top-6 right-6 bg-red-600/90 backdrop-blur-md text-white px-5 py-2.5 rounded-xl flex items-center gap-2.5 font-bold shadow-lg">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                  </span>
+                  <span>مباشر الآن</span>
                 </div>
               )}
             </div>
           )}
 
-          <div className="p-8">
-            <div className="mb-6">
-              <span className="bg-red-100 text-red-800 px-3 py-1 rounded text-sm font-semibold">
+          <div className="p-8 md:p-12">
+            <div className="mb-8">
+              <span className="bg-primary/10 text-primary px-4 py-2 rounded-lg text-sm font-bold border border-primary/20">
                 {getCategoryLabel(event.category)}
               </span>
             </div>
 
-            <h1 className="text-4xl font-bold mb-4 leading-tight">
+            <h1 className="text-4xl md:text-5xl font-black mb-6 leading-[1.3] text-foreground">
               {event.title}
             </h1>
 
             {event.summary && (
-              <p className="text-xl text-gray-700 mb-6 leading-relaxed">
+              <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed font-medium">
                 {event.summary}
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-gray-600 mb-8 pb-6 border-b">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                <span>آخر تحديث: {formatDate(event.updated_at)}</span>
+            <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-10 pb-8 border-b-2 border-border/50">
+              <div className="flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-xl">
+                <Clock className="w-5 h-5 text-primary" />
+                <span className="font-bold">آخر تحديث: {formatDate(event.updated_at)}</span>
               </div>
-              <span className="text-gray-400">•</span>
-              <span>{updates.length} تحديث</span>
+              <div className="flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-xl">
+                <Radio className={`w-5 h-5 ${isActive ? 'text-red-500 animate-pulse' : 'text-primary'}`} />
+                <span className="font-bold">{updates.length} تحديث</span>
+              </div>
             </div>
 
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold mb-6">التحديثات المباشرة</h2>
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-black text-foreground flex items-center gap-3">
+                  <span className="w-2 h-8 bg-gold rounded-full inline-block"></span>
+                  التحديثات المباشرة
+                </h2>
+                {isActive && (
+                  <span className="text-sm font-bold text-red-500 animate-pulse flex items-center gap-2 bg-red-50 dark:bg-red-950/20 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-900/50">
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                    يتم التحديث تلقائياً
+                  </span>
+                )}
+              </div>
               
-              {updates.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">لا توجد تحديثات حتى الآن</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {updates.map((update, index) => (
-                    <div 
-                      key={update.id}
-                      className={`border-r-4 pr-6 py-4 ${
-                        index === 0 && isActive
-                          ? 'border-red-500 bg-red-50'
-                          : 'border-gray-300 bg-gray-50'
-                      } rounded-lg`}
-                    >
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                        <Clock className="w-4 h-4" />
-                        <span>{formatDate(update.created_at)}</span>
-                        {index === 0 && isActive && (
-                          <span className="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-semibold">
-                            جديد
-                          </span>
-                        )}
-                      </div>
-                      <div 
-                        className="prose prose-lg max-w-none"
-                        dangerouslySetInnerHTML={{ __html: update.content }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              <LiveEventUpdates 
+                initialUpdates={updates} 
+                eventId={event.id} 
+                isActive={isActive} 
+              />
             </div>
 
             {!isActive && (
-              <div className="mt-8 p-4 bg-gray-100 rounded-lg text-center">
-                <p className="text-gray-600">انتهت التغطية المباشرة لهذا الحدث</p>
+              <div className="mt-12 p-6 bg-secondary/50 border border-border rounded-xl text-center shadow-sm">
+                <h3 className="text-xl font-bold text-foreground mb-2">انتهت التغطية</h3>
+                <p className="text-muted-foreground font-medium">شكراً لمتابعتكم التغطية المباشرة لهذا الحدث عبر نفود الإخبارية.</p>
               </div>
             )}
           </div>

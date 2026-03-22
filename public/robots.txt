@@ -1,0 +1,28 @@
+# robots.txt for nfoud.com
+User-agent: *
+Allow: /
+Disallow: /dashboard-control-panel-2025/
+Disallow: /auth/
+Disallow: /init-super-admin/
+Disallow: /api/
+
+# Crawl-delay for all bots
+Crawl-delay: 1
+
+# Special rules for Google
+User-agent: Googlebot
+Allow: /
+Disallow: /dashboard-control-panel-2025/
+Disallow: /auth/
+Disallow: /init-super-admin/
+
+# Special rules for Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /dashboard-control-panel-2025/
+Disallow: /auth/
+Disallow: /init-super-admin/
+
+# Sitemap location
+Sitemap: https://nfoud.com/sitemap.xml
+Sitemap: https://nfoud.com/rss.xml

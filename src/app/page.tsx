@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { supabase } from '@/lib/supabase';
 import { News, LiveEvent } from '@/types/news';
 import NewsCard from '@/components/NewsCard';
@@ -8,8 +9,15 @@ import Footer from '@/components/Footer';
 import { TrendingUp, Newspaper, Globe, Trophy, ChevronLeft, Radio } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from '@/lib/constants';
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: SITE_URL,
+  },
+};
 
 async function getFeaturedNews(): Promise<News[]> {
   try {
@@ -19,22 +27,27 @@ async function getFeaturedNews(): Promise<News[]> {
       .not('source_news_id', 'is', null)
       .eq('live_events.status', 'active');
 
-    const linkedNewsIds = linkedNews?.map((item: any) => item.source_news_id).filter(Boolean) || [];
+    const linkedNewsIds = Array.from(new Set(linkedNews?.map((item: any) => item.source_news_id).filter(Boolean) || []));
 
     const query = supabase
       .from('news')
-      .select('*, editors(name, position)')
+      .select('*') // Removed ', editors(name, position)' as relationship is missing
       .order('created_at', { ascending: false })
       .limit(20);
 
-    if (linkedNewsIds.length > 0) {
-      query.not('id', 'in', `(${linkedNewsIds.join(',')})`);
+    // If there are too many linkedNewsIds, it causes a Headers Overflow Error in the HTTP request.
+    // We limit the exclude list to a reasonable number to prevent the URL from getting too long.
+    // UUIDs are ~36 chars long, so 20 of them is ~720 chars, which is very safe.
+    const safeLinkedNewsIds = linkedNewsIds.slice(0, 20);
+
+    if (safeLinkedNewsIds.length > 0) {
+      query.not('id', 'in', `(${safeLinkedNewsIds.join(',')})`);
     }
 
     const { data, error } = await query;
     
     if (error) {
-      console.error('Error fetching news:', error);
+      console.error('Error fetching news:', JSON.stringify(error, null, 2));
       return [];
     }
 
@@ -49,13 +62,13 @@ async function getLiveEvents(): Promise<LiveEvent[]> {
   try {
     const { data, error } = await supabase
       .from('live_events')
-      .select('*, live_event_updates(count)')
+      .select('*') // Removed ', live_event_updates(count)' as relationship is missing
       .eq('status', 'active')
       .order('updated_at', { ascending: false })
       .limit(3);
 
     if (error) {
-      console.error('Error fetching live events:', error);
+      console.error('Error fetching live events:', JSON.stringify(error, null, 2));
       return [];
     }
 
@@ -90,54 +103,68 @@ export default async function Home() {
       <NewsTickerWrapper />
       
       {/* Hero Section */}
-      <header className="relative h-[600px] overflow-hidden">
+      <header className="relative h-[85vh] min-h-[600px] overflow-hidden">
         <div className="absolute inset-0">
           <Image
             src="/nafud-desert-hero.jpg"
             alt="صورة خلفية لصحراء النفود"
             fill
-            className="object-cover"
+            className="object-cover scale-105 animate-pulse-slow"
             priority
+            quality={85}
+            sizes="100vw"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q=="
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/80 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-primary/90 to-primary/60"></div>
+          {/* Decorative CSS Pattern overlay */}
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
         </div>
-        <div className="relative container mx-auto px-4 h-full flex items-center">
-          <div className="text-white max-w-4xl">
-            <span className="inline-block px-5 py-2.5 bg-accent/90 text-accent-foreground rounded-full text-sm font-extrabold mb-6 animate-fade-in backdrop-blur-sm tracking-wide">
-              أخبار حصرية وموثوقة مدعومة بالذكاء الاصطناعي
+        <div className="relative container mx-auto px-4 h-full flex items-center justify-center text-center">
+          <div className="text-white max-w-5xl mt-16">
+            <span className="inline-block px-6 py-3 bg-accent text-accent-foreground rounded-2xl text-sm font-black mb-8 animate-fade-in shadow-xl tracking-wider uppercase">
+              أول شبكة سعودية تعمل بالذكاء الاصطناعي
             </span>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 text-gold animate-fade-in leading-[1.15]" style={{ animationDelay: '0.1s' }}>
-              نفود – شبكة أخبار سعودية بالذكاء الاصطناعي
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-gold-light via-gold to-gold-dark animate-fade-in leading-[1.2]" style={{ animationDelay: '0.1s' }}>
+              نفود الإخبارية
             </h1>
-            <p className="text-2xl md:text-3xl mb-6 animate-fade-in font-bold text-white/95" style={{ animationDelay: '0.2s' }}>
-              آخر الأخبار والتحليلات من المملكة والعالم
+            <p className="text-2xl md:text-4xl mb-8 animate-fade-in font-bold text-white/95" style={{ animationDelay: '0.2s' }}>
+              دقة في نقل الحدث.. وموضوعية في التحليل
             </p>
-            <p className="text-lg md:text-xl mb-8 text-white/80 leading-loose animate-fade-in max-w-2xl font-medium" style={{ animationDelay: '0.3s' }}>
+            <p className="text-lg md:text-2xl mb-12 text-white/80 leading-relaxed animate-fade-in max-w-3xl mx-auto font-medium" style={{ animationDelay: '0.3s' }}>
               منصة إخبارية سعودية تجمع بين الموثوقية الصحفية وتقنيات الذكاء الاصطناعي لتقديم أحدث الأخبار السياسية والاقتصادية والمحلية والرياضية بأسلوب عصري واحترافي
             </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
+              <Link href="#featured-news-heading" className="px-8 py-4 bg-gradient-to-r from-gold-dark to-gold text-accent-foreground font-black text-lg rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+                تصفح أحدث الأخبار
+              </Link>
+              <Link href="#live-events-heading" className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-white/20 hover:scale-105 transition-all">
+                التغطيات الحية
+              </Link>
+            </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent pointer-events-none"></div>
       </header>
 
       {/* Categories Quick Access */}
-      <nav className="py-12 -mt-16 relative z-10" aria-label="الوصول السريع للأقسام">
+      <nav className="py-12 -mt-20 relative z-10" aria-label="الوصول السريع للأقسام">
         <div className="container mx-auto px-4">
           <h2 className="sr-only">أقسام الأخبار</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
             {categories.map((category, index) => {
               const IconComponent = iconMap[category.icon];
               return (
                 <Link
                   key={category.name}
                   href={category.link}
-                  className="flex flex-row-reverse items-center justify-center gap-4 bg-card p-8 rounded-2xl border border-border/50 shadow-elegant hover:shadow-xl transition-all duration-300 group animate-slide-up"
+                  className="flex flex-col md:flex-row-reverse items-center justify-center gap-3 md:gap-4 bg-card/90 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-border shadow-elegant hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group animate-slide-up"
                   style={{ animationDelay: `${index * 0.1}s` }}
                   aria-label={`الانتقال إلى قسم ${category.name}`}
                 >
-                  <span className="text-lg font-bold group-hover:text-gold transition-colors">{category.name}</span>
-                  <div className="p-4 bg-secondary rounded-full group-hover:bg-accent/10 transition-colors">
-                    <IconComponent className={`${category.color} group-hover:scale-110 transition-transform duration-300`} size={36} aria-hidden="true" />
+                  <span className="text-xl md:text-2xl font-black group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-gold-dark group-hover:to-gold transition-all">{category.name}</span>
+                  <div className="p-4 md:p-5 bg-secondary/50 rounded-2xl group-hover:bg-accent/10 group-hover:scale-110 transition-all duration-500">
+                    <IconComponent className={`${category.color} drop-shadow-md`} size={32} aria-hidden="true" />
                   </div>
                 </Link>
               );

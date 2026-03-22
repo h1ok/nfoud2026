@@ -9,8 +9,13 @@ import Navbar from '@/components/Navbar';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Footer from '@/components/Footer';
 import ShareButtons from '@/components/ShareButtons';
+import Breadcrumbs from '@/components/Breadcrumbs';
+import RelatedArticles from '@/components/RelatedArticles';
+import InternalLinks from '@/components/InternalLinks';
 import { Calendar } from 'lucide-react';
 import DOMPurify from 'isomorphic-dompurify';
+
+export const revalidate = 300;
 
 function getTimeAgo(date: string): string {
   const now = new Date();
@@ -28,21 +33,23 @@ function getCategoryPath(category: string): string {
   return paths[category] || '/';
 }
 
-async function getArticle(slug: string): Promise<News | null> {
-  const { data, error } = await supabase
+async function getArticle(rawSlug: string): Promise<News | null> {
+  const slug = decodeURIComponent(rawSlug);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(slug);
+  const { data: news, error } = await supabase
     .from('news')
-    .select('*, editors(name, position, bio)')
-    .or(`slug.eq.${slug},id.eq.${slug}`)
+    .select('*')
+    .eq(isUuid ? 'id' : 'slug', slug)
     .single();
 
-  if (error || !data) return null;
-  return data;
+  if (error || !news) return null;
+  return news;
 }
 
 async function getRelatedNews(category: string, excludeId: string): Promise<News[]> {
   const { data } = await supabase
     .from('news')
-    .select('*, editors(name)')
+    .select('*')
     .eq('category', category)
     .neq('id', excludeId)
     .order('created_at', { ascending: false })
@@ -52,7 +59,8 @@ async function getRelatedNews(category: string, excludeId: string): Promise<News
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const article = await getArticle(slug);
+  const decodedSlug = decodeURIComponent(slug);
+  const article = await getArticle(decodedSlug);
 
   if (!article) {
     return { title: 'المقال غير موجود' };
@@ -60,33 +68,48 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const articleUrl = `${SITE_URL}/article/${article.slug || article.id}`;
 
+  const ogImage = article.image_url || `${SITE_URL}/api/og?title=${encodeURIComponent(article.title)}&category=${encodeURIComponent(getCategoryLabel(article.category))}`;
+
   return {
     title: article.title,
     description: article.meta_description || article.excerpt || article.title,
     keywords: article.keywords?.join(', '),
+    alternates: {
+      canonical: articleUrl,
+    },
     openGraph: {
       type: 'article',
       url: articleUrl,
       title: article.title,
       description: article.meta_description || article.excerpt || article.title,
-      images: article.image_url ? [{ url: article.image_url }] : [],
+      images: [{ 
+        url: ogImage,
+        width: 1200,
+        height: 630,
+        alt: article.title,
+      }],
       publishedTime: article.created_at,
       modifiedTime: article.updated_at || article.created_at,
       section: getCategoryLabel(article.category),
       tags: article.keywords || [],
+      locale: 'ar_SA',
+      siteName: SITE_NAME,
     },
     twitter: {
       card: 'summary_large_image',
+      site: '@Nfoud_ai',
+      creator: '@Nfoud_ai',
       title: article.title,
       description: article.meta_description || article.excerpt || article.title,
-      images: article.image_url ? [article.image_url] : [],
+      images: [ogImage],
     },
   };
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const article = await getArticle(slug);
+  const decodedSlug = decodeURIComponent(slug);
+  const article = await getArticle(decodedSlug);
 
   if (!article) {
     notFound();
@@ -111,6 +134,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     "author": article.editors ? {
       "@type": "Person",
       "name": article.editors.name,
+      "jobTitle": article.editors.position,
     } : {
       "@type": "Organization",
       "name": SITE_NAME,
@@ -120,13 +144,46 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       "@type": "NewsMediaOrganization",
       "name": SITE_NAME,
       "url": SITE_URL,
-      "logo": { "@type": "ImageObject", "url": `${SITE_URL}/nafud-logo.png` },
+      "logo": { 
+        "@type": "ImageObject", 
+        "url": `${SITE_URL}/nafud-logo.png`,
+        "width": 512,
+        "height": 512,
+      },
     },
     "mainEntityOfPage": { "@type": "WebPage", "@id": articleUrl },
     "articleSection": getCategoryLabel(article.category),
     "keywords": article.keywords?.join(', '),
     "inLanguage": "ar",
     "isAccessibleForFree": true,
+    "url": articleUrl,
+    "thumbnailUrl": article.image_url,
+    "wordCount": article.content ? article.content.split(/\s+/).length : 0,
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "الرئيسية",
+        "item": SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": getCategoryLabel(article.category),
+        "item": `${SITE_URL}${getCategoryPath(article.category)}`,
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": article.title,
+        "item": articleUrl,
+      },
+    ],
   };
 
   return (
@@ -134,6 +191,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       <Navbar />
@@ -151,6 +212,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
+            <Breadcrumbs items={[
+              { label: 'الرئيسية', href: '/' },
+              { label: getCategoryLabel(article.category), href: getCategoryPath(article.category) },
+              { label: article.title, href: articleUrl }
+            ]} />
+            
             {/* Title */}
             <header>
               <h1 className="text-4xl md:text-5xl font-bold mb-8 leading-tight tracking-wide">
@@ -182,6 +249,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   height={504}
                   className="w-full h-full object-cover"
                   priority
+                  quality={85}
+                  sizes="(max-width: 896px) 100vw, 896px"
                   unoptimized={article.image_url.includes('twimg.com')}
                 />
               </figure>
@@ -195,7 +264,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             )}
 
             {/* Key Points */}
-            {article.key_points && article.key_points.length > 0 && (
+            {Array.isArray(article.key_points) && article.key_points.length > 0 && (
               <aside className="mb-8 border-t-4 border-gold bg-secondary/50 rounded-lg p-6" role="complementary" aria-label="النقاط الرئيسية">
                 <h2 className="text-xl font-bold mb-4 text-foreground">النقاط الرئيسية</h2>
                 <ul className="space-y-3 list-disc list-inside pr-2">
@@ -239,40 +308,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               </aside>
             )}
 
-            {/* Related Articles */}
-            {relatedNews.length > 0 && (
-              <aside className="mt-16 pt-8 border-t-2 border-gold" role="complementary" aria-label="أخبار ذات صلة">
-                <h2 className="text-2xl font-bold mb-6">أخبار ذات صلة</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {relatedNews.map((news) => (
-                    <article key={news.id}>
-                      <a href={`/article/${news.slug || news.id}`} className="group">
-                        <div className="flex gap-4 p-4 border border-border rounded-lg hover:border-gold transition-all">
-                          {news.image_url && (
-                            <Image
-                              src={news.image_url}
-                              alt={news.title}
-                              width={96}
-                              height={96}
-                              className="w-24 h-24 object-cover rounded-md"
-                              unoptimized={news.image_url.includes('twimg.com')}
-                            />
-                          )}
-                          <div className="flex-1">
-                            <h3 className="font-bold group-hover:text-gold transition-colors line-clamp-2">
-                              {news.title}
-                            </h3>
-                            <time className="text-sm text-muted-foreground mt-2 block" dateTime={news.created_at}>
-                              {getTimeAgo(news.created_at)}
-                            </time>
-                          </div>
-                        </div>
-                      </a>
-                    </article>
-                  ))}
-                </div>
-              </aside>
-            )}
+            <InternalLinks 
+              title="اقرأ أيضاً"
+              links={[
+                { title: 'جميع الأخبار', href: '/all-news', description: 'تصفح كل الأخبار المنشورة' },
+                { title: `أخبار ${getCategoryLabel(article.category)}`, href: getCategoryPath(article.category), description: `المزيد من أخبار ${getCategoryLabel(article.category)}` },
+                { title: 'التغطيات الحية', href: '/live', description: 'تابع الأحداث لحظة بلحظة' },
+                { title: 'من نحن', href: '/about', description: 'تعرف على نفود الإخبارية' },
+              ]}
+            />
+
+            <RelatedArticles articles={relatedNews} currentArticleId={article.id} />
           </div>
         </div>
       </article>
