@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
+
+// ✅ هذا السطر يحل مشكلة البناء - يمنع Next.js من التحليل الـ static
+export const dynamic = 'force-dynamic';
 
 const WEBHOOK_TOKEN = process.env.WEBHOOK_NEWS_TOKEN;
 
@@ -24,22 +27,17 @@ function generateSlug(title: string): string {
 export async function POST(request: NextRequest) {
   try {
     // ✅ 1. التحقق من التوكن
-    const auth = request.headers.get('authorization');
     if (!WEBHOOK_TOKEN) {
-      console.error('[webhook-add-news] WEBHOOK_NEWS_TOKEN is not set in environment');
+      console.error('[webhook-add-news] WEBHOOK_NEWS_TOKEN is not set');
       return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
     }
+
+    const auth = request.headers.get('authorization');
     if (!auth || auth !== `Bearer ${WEBHOOK_TOKEN}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // ✅ 2. التحقق من supabaseAdmin
-    if (!supabaseAdmin) {
-      console.error('[webhook-add-news] supabaseAdmin is not initialized — check SUPABASE_SERVICE_ROLE_KEY');
-      return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 });
-    }
-
-    // ✅ 3. قراءة الـ body
+    // ✅ 2. قراءة الـ body
     let body: Record<string, unknown>;
     try {
       body = await request.json();
@@ -47,7 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    // ✅ 4. التحقق من الحقول المطلوبة
+    // ✅ 3. التحقق من الحقول المطلوبة
     if (!body.title || !body.content) {
       return NextResponse.json(
         { error: 'Missing required fields: title and content' },
@@ -55,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ✅ 5. بناء الـ record
+    // ✅ 4. بناء الـ record
     const record: Record<string, unknown> = {};
     for (const field of ALLOWED_FIELDS) {
       if (body[field] !== undefined && body[field] !== null && body[field] !== '') {
@@ -63,9 +61,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!record.status) {
-      record.status = 'published';
-    }
+    if (!record.status) record.status = 'published';
 
     if (!record.slug) {
       record.slug = generateSlug(body.title as string);
@@ -79,7 +75,9 @@ export async function POST(request: NextRequest) {
       record.excerpt = plain.substring(0, 200);
     }
 
-    // ✅ 6. الإدراج في Supabase
+    // ✅ 5. الإدراج - supabaseAdmin يُنشأ هنا فقط (وليس أثناء البناء)
+    const supabaseAdmin = getSupabaseAdmin();
+
     const { data, error } = await supabaseAdmin
       .from('news')
       .insert(record)
@@ -104,13 +102,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ✅ 7. إعادة التحقق من الكاش
+    // ✅ 6. إعادة التحقق من الكاش
     try {
       revalidatePath('/', 'layout');
       revalidatePath('/all-news', 'page');
-      if (data.category) {
-        revalidatePath(`/${data.category}`, 'page');
-      }
+      if (data.category) revalidatePath(`/${data.category}`, 'page');
     } catch (e) {
       console.error('[webhook-add-news] Revalidation error:', e);
     }
