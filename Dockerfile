@@ -8,7 +8,7 @@ WORKDIR /app
 
 # نسخ ملفات package
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # إعادة بناء الكود المصدري فقط عند الحاجة
 FROM base AS builder
