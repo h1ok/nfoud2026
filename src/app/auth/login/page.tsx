@@ -23,40 +23,30 @@ export default function LoginPage() {
     setError('');
 
     try {
-      console.log('Attempting login...');
-      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+      const result = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password,
       });
 
-      console.log('Login response:', { data, error });
-
-      if (error) {
-        console.error('Login error:', error);
-        throw error;
+      if (result.error) {
+        if (result.error.message?.includes('Invalid login credentials')) {
+          setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+        } else {
+          setError(result.error.message || 'فشل تسجيل الدخول');
+        }
+        return;
       }
 
-      if (data.user) {
-        console.log('Login successful, redirecting...');
+      if (result.data.user) {
         router.push('/dashboard-control-panel-2025');
         router.refresh();
       }
     } catch (err: any) {
-      console.error('Login catch error:', err);
-      
-      let errorMessage = 'فشل تسجيل الدخول';
-      
-      if (err.message?.includes('fetch')) {
-        errorMessage = 'خطأ في الاتصال بالخادم. تحقق من اتصال الإنترنت.';
-      } else if (err.message?.includes('Invalid login credentials')) {
-        errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-      } else if (err.message) {
-        errorMessage = err.message;
+      if (err?.message?.includes('fetch') || err?.name === 'TypeError') {
+        setError('خطأ في الاتصال بالخادم. تحقق من اتصال الإنترنت.');
+      } else {
+        setError(err?.message || 'فشل تسجيل الدخول');
       }
-      
-      setError(errorMessage);
     } finally {
       setLoading(false);
     }

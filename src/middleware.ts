@@ -9,14 +9,14 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: https:;
-    font-src 'self' data:;
-    connect-src 'self' https://vraxaknyauqlnyardhla.supabase.co;
+    font-src 'self' data: https://fonts.gstatic.com;
+    connect-src 'self' ${supabaseUrl} https://*.supabase.co;
     frame-ancestors 'none';
   `.replace(/\s{2,}/g, ' ').trim();
   

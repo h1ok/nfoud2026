@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export default function EditNewsPage({ params }: { params: { id: string } }) {
+export default function EditNewsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,14 +36,14 @@ export default function EditNewsPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     loadNews();
-  }, [params.id]);
+  }, [id]);
 
   const loadNews = async () => {
     try {
       const { data, error } = await supabase
         .from('news')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
 
       if (error) throw error;
@@ -82,7 +83,7 @@ export default function EditNewsPage({ params }: { params: { id: string } }) {
       const { error } = await supabase
         .from('news')
         .update(newsData)
-        .eq('id', params.id);
+        .eq('id', id);
 
       if (error) throw error;
 
