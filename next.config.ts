@@ -74,7 +74,7 @@ const nextConfig: NextConfig = {
       ],
     },
     {
-      source: '/(.*\\.(jpg|jpeg|png|gif|webp|avif|svg|ico))',
+      source: '/:path*.(jpg|jpeg|png|gif|webp|avif|svg|ico)',
       headers: [
         { key: 'Cache-Control', value: 'public, max-age=604800, immutable' },
       ],
