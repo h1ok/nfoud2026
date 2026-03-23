@@ -135,10 +135,33 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       "@type": "Person",
       "name": article.editors.name,
       "jobTitle": article.editors.position,
+      "url": `${SITE_URL}/authors`,
+      "sameAs": [
+        "https://x.com/Nfoud_ai",
+        "https://www.instagram.com/nfooud.ai/",
+      ],
+      "knowsAbout": [
+        getCategoryLabel(article.category),
+        "الأخبار السعودية",
+        "التحليل الإخباري",
+      ],
     } : {
       "@type": "Organization",
-      "name": SITE_NAME,
-      "url": SITE_URL,
+      "name": "فريق تحرير نفود",
+      "url": `${SITE_URL}/authors`,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_URL}/nafud-logo.png`,
+        "width": 512,
+        "height": 512,
+      },
+      "description": "فريق من المحررين والصحفيين المتخصصين في تغطية الأخبار السعودية والعربية",
+      "knowsAbout": [
+        getCategoryLabel(article.category),
+        "الأخبار السعودية",
+        "الأخبار العاجلة",
+        "التغطية الإخبارية",
+      ],
     },
     "publisher": {
       "@type": "NewsMediaOrganization",

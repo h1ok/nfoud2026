@@ -243,7 +243,7 @@ export default async function Home() {
           <header className="flex items-center mb-12">
             <div className="flex items-center gap-4 flex-1">
               <div className="h-1.5 w-16 gradient-gold rounded-full" aria-hidden="true"></div>
-              <h2 id="featured-news-heading" className="text-4xl font-bold text-foreground">أحدث الأخبار</h2>
+              <h2 id="featured-news-heading" className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">أحدث الأخبار</h2>
               <div className="h-1.5 flex-1 bg-gradient-to-r from-gold/50 to-transparent rounded-full" aria-hidden="true"></div>
             </div>
           </header>
@@ -271,20 +271,20 @@ export default async function Home() {
         </section>
 
         {/* Newsletter CTA */}
-        <section className="relative overflow-hidden rounded-3xl shadow-xl mb-16" aria-labelledby="newsletter-heading">
+        <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-xl mb-16" aria-labelledby="newsletter-heading">
           <div className="absolute inset-0 gradient-gold opacity-95" aria-hidden="true"></div>
-          <div className="relative p-16 text-center">
-            <h2 id="newsletter-heading" className="text-4xl font-bold mb-6 text-primary">اشترك في النشرة الإخبارية</h2>
-            <p className="text-xl mb-10 max-w-2xl mx-auto text-primary/90 leading-relaxed">
+          <div className="relative p-8 sm:p-12 md:p-16 text-center">
+            <h2 id="newsletter-heading" className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-primary">اشترك في النشرة الإخبارية</h2>
+            <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto text-primary/90 leading-relaxed">
               اشترك في نشرتنا الإخبارية للحصول على آخر الأخبار والتحليلات مباشرة في بريدك الإلكتروني
             </p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
               <input
                 type="email"
                 placeholder="بريدك الإلكتروني"
-                className="flex-1 px-6 py-4 rounded-xl text-foreground border-2 border-transparent focus:border-primary focus:outline-none shadow-md text-lg"
+                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl text-foreground border-2 border-transparent focus:border-primary focus:outline-none shadow-md text-base sm:text-lg"
               />
-              <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-10 py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+              <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
                 اشترك الآن
               </button>
             </div>

@@ -145,6 +145,39 @@ const websiteSchema = {
   },
 };
 
+// Default author schema for E-E-A-T
+const defaultAuthorSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "فريق تحرير نفود",
+  "url": SITE_URL,
+  "logo": {
+    "@type": "ImageObject",
+    "url": `${SITE_URL}/nafud-logo.png`,
+    "width": 512,
+    "height": 512,
+  },
+  "description": "فريق من المحررين والصحفيين المتخصصين في تغطية الأخبار السعودية والعربية",
+  "sameAs": [
+    "https://x.com/Nfoud_ai",
+    "https://www.instagram.com/nfooud.ai/",
+    "https://www.tiktok.com/@nfoud_ai",
+  ],
+  "knowsAbout": [
+    "السياسة السعودية",
+    "الاقتصاد السعودي",
+    "الأخبار العاجلة",
+    "التغطية الإخبارية",
+    "التحليل السياسي",
+    "الشؤون العربية"
+  ],
+  "jobTitle": "فريق التحرير",
+  "worksFor": {
+    "@type": "NewsMediaOrganization",
+    "name": SITE_NAME,
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -171,6 +204,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(defaultAuthorSchema) }}
         />
       </body>
     </html>

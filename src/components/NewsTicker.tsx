@@ -199,6 +199,54 @@ export default function NewsTicker({
           flex-shrink: 0;
         }
 
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+          .ticker-label {
+            padding: 0.25rem 0.6rem;
+            font-size: 0.75rem;
+            gap: 0.3rem;
+          }
+          
+          .ticker-separator {
+            height: 1rem;
+          }
+          
+          .ticker-highlight {
+            font-size: 0.75rem;
+            line-height: 1.5rem;
+          }
+          
+          .ticker-progress-track {
+            width: 2rem;
+            height: 2px;
+          }
+          
+          .ticker-counter {
+            font-size: 0.7rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .ticker-label {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+          }
+          
+          .ticker-highlight {
+            font-size: 0.7rem;
+            line-height: 1.4rem;
+          }
+          
+          .ticker-progress-track {
+            width: 1.5rem;
+            height: 2px;
+          }
+          
+          .ticker-counter {
+            font-size: 0.65rem;
+          }
+        }
+
         .ticker-dot {
           width: 7px;
           height: 7px;
