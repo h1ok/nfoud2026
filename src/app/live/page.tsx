@@ -5,7 +5,7 @@ import LiveEventCard from '@/components/LiveEventCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Radio } from 'lucide-react';
+import { Radio, ChevronLeft } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,9 +19,9 @@ async function getLiveEvents(): Promise<LiveEvent[]> {
   const { data, error } = await supabaseServer
     .from('live_events')
     .select('*, live_event_updates(count)')
-    .in('status', ['active', 'ended'])
+    .in('status', ['active', 'ended', 'archived'])
     .order('updated_at', { ascending: false })
-    .limit(20);
+    .limit(200);
 
   if (error) {
     console.error('Error fetching live events:', error);
@@ -31,13 +31,14 @@ async function getLiveEvents(): Promise<LiveEvent[]> {
   return data?.map(event => ({
     ...event,
     updates_count: event.live_event_updates?.[0]?.count || 0
-  })) || [];
+  })).filter(event => event.status === 'active' || (event.updates_count || 0) > 0) || [];
 }
 
 export default async function LiveEventsPage() {
   const events = await getLiveEvents();
   const activeEvents = events.filter(e => e.status === 'active');
   const endedEvents = events.filter(e => e.status === 'ended');
+  const archivedEvents = events.filter(e => e.status === 'archived');
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -77,6 +78,25 @@ export default async function LiveEventsPage() {
                 <LiveEventCard key={event.id} event={event} />
               ))}
             </div>
+          </section>
+        )}
+
+        {archivedEvents.length > 0 && (
+          <section className="mt-12" aria-labelledby="archived-events-heading">
+            <details className="group rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <summary id="archived-events-heading" className="list-none cursor-pointer">
+                <span className="inline-flex items-center gap-2 text-gold hover:text-gold/80 font-bold transition-colors text-lg group-open:mb-3">
+                  <ChevronLeft size={20} className="transition-transform group-open:-rotate-90" aria-hidden="true" />
+                  عرض المزيد (الأحداث المؤرشفة)
+                </span>
+              </summary>
+              <p className="mt-3 mb-6 text-muted-foreground">جميع الأحداث المؤرشفة السابقة المتاحة للمراجعة.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {archivedEvents.map((event) => (
+                  <LiveEventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </details>
           </section>
         )}
 

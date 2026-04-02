@@ -17,6 +17,30 @@ interface LiveEventUpdate {
   created_at: string;
   update_type: string;
   source_news_id: string | null;
+  source_news_slug?: string | null;
+  source_news_image_url?: string | null;
+}
+
+function buildNewsDetailsUrl(newsId: string | null, slug?: string | null) {
+  if (slug && slug.trim().length > 0) {
+    return `/news/${slug}`;
+  }
+
+  if (newsId) {
+    return `/news/${newsId}`;
+  }
+
+  return null;
+}
+
+function buildUnifiedUpdateContent(update: LiveEventUpdate) {
+  const detailsUrl = buildNewsDetailsUrl(update.source_news_id, update.source_news_slug);
+
+  if (!detailsUrl || update.content.includes('اقرأ التفاصيل الكاملة عبر الرابط')) {
+    return update.content;
+  }
+
+  return `${update.content}<br /><br /><a href="${detailsUrl}" class="text-gold font-bold hover:underline">اقرأ التفاصيل الكاملة عبر الرابط</a>`;
 }
 
 async function getLiveEvent(id: string): Promise<LiveEvent | null> {
@@ -45,7 +69,31 @@ async function getLiveEventUpdates(eventId: string): Promise<LiveEventUpdate[]> 
     return [];
   }
 
-  return data || [];
+  const baseUpdates = (data || []) as LiveEventUpdate[];
+  const sourceNewsIds = [...new Set(baseUpdates.map((item) => item.source_news_id).filter(Boolean))] as string[];
+
+  if (sourceNewsIds.length === 0) {
+    return baseUpdates;
+  }
+
+  const { data: newsItems, error: newsError } = await supabaseServer
+    .from('news')
+    .select('id, slug, image_url')
+    .in('id', sourceNewsIds);
+
+  if (newsError) {
+    return baseUpdates;
+  }
+
+  const newsMap = new Map(
+    ((newsItems || []) as Array<{ id: string; slug: string | null; image_url: string | null }>).map((item) => [item.id, item])
+  );
+
+  return baseUpdates.map((item) => ({
+    ...item,
+    source_news_slug: item.source_news_id ? newsMap.get(item.source_news_id)?.slug ?? null : null,
+    source_news_image_url: item.source_news_id ? newsMap.get(item.source_news_id)?.image_url ?? null : null,
+  }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -84,6 +132,7 @@ export default async function LiveEventPage({ params }: { params: Promise<{ id: 
   }
 
   const isActive = event.status === 'active';
+  const heroImage = event.main_image_url || updates.find((update) => update.source_news_image_url)?.source_news_image_url || null;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -91,10 +140,10 @@ export default async function LiveEventPage({ params }: { params: Promise<{ id: 
       
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
         <div className="bg-card rounded-2xl shadow-elegant overflow-hidden border border-border/50">
-          {event.main_image_url && (
+          {heroImage && (
             <div className="relative w-full h-96">
               <Image
-                src={event.main_image_url}
+                src={heroImage}
                 alt={event.title}
                 fill
                 className="object-cover"
@@ -164,7 +213,7 @@ export default async function LiveEventPage({ params }: { params: Promise<{ id: 
                       </div>
                       <div 
                         className="prose prose-lg max-w-none"
-                        dangerouslySetInnerHTML={{ __html: update.content }}
+                        dangerouslySetInnerHTML={{ __html: buildUnifiedUpdateContent(update) }}
                       />
                     </div>
                   ))}

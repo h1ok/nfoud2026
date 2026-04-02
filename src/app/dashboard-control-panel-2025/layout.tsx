@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { LayoutDashboard, Newspaper, Radio, LogOut } from 'lucide-react';
+import { LayoutDashboard, Newspaper, Radio, LogOut, ChartColumn } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard-control-panel-2025', label: 'الرئيسية', icon: LayoutDashboard },
   { href: '/dashboard-control-panel-2025/news', label: 'إدارة الأخبار', icon: Newspaper },
+  { href: '/dashboard-control-panel-2025/statistics', label: 'الإحصائيات', icon: ChartColumn },
   { href: '/dashboard-control-panel-2025/live-events', label: 'الأحداث الحية', icon: Radio },
 ];
 

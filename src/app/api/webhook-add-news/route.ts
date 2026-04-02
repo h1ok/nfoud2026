@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { validateWordCount, optimizeSEO } from '@/lib/ai-seo';
+import { syncLiveEventFromNews } from '@/lib/live-events';
 
 const WEBHOOK_TOKEN = process.env.WEBHOOK_SECRET_TOKEN || '2080db46-34ae-40f6-bd22-1b88ca0bffa8';
 
@@ -140,6 +141,19 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to insert news', details: error.message },
         { status: 500 }
       );
+    }
+
+    try {
+      await syncLiveEventFromNews(supabaseAdmin, {
+        id: data.id,
+        title: data.title,
+        excerpt: data.excerpt,
+        image_url: data.image_url,
+        category: data.category,
+        created_at: data.created_at,
+      });
+    } catch (liveEventError) {
+      console.error('Live event sync failed:', liveEventError);
     }
 
     return NextResponse.json({
