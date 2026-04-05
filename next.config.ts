@@ -30,9 +30,15 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60 * 60 * 24,
-    deviceSizes: [640, 750, 828, 1080, 1200],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    minimumCacheTTL: 60 * 60 * 24 * 7,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
   allowedDevOrigins: ['localhost', '127.0.0.1', '192.168.8.132', '192.168.237.128'],
   compress: true,
@@ -55,7 +61,39 @@ const nextConfig: NextConfig = {
         { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
       ],
     },
+    {
+      source: '/_next/image(.*)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+      ],
+    },
+    {
+      source: '/api/(.*)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
+      ],
+    },
+    {
+      source: '/:path*.(jpg|jpeg|png|gif|webp|avif|svg|ico)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=604800, immutable' },
+      ],
+    },
   ],
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/index',
+        destination: '/',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

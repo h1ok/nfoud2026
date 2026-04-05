@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 async function getAllNews(): Promise<News[]> {
   const { data, error } = await supabaseServer
     .from('news')
-    .select('*, editors(name, position)')
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
     .limit(48);
 
