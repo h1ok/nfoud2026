@@ -1,6 +1,21 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { LayoutDashboard, Newspaper, Radio, LogOut, ChartColumn } from 'lucide-react';
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+      'max-image-preview': 'none',
+      'max-snippet': 0,
+      'max-video-preview': 0,
+    },
+  },
+};
 
 const navItems = [
   { href: '/dashboard-control-panel-2025', label: 'الرئيسية', icon: LayoutDashboard },

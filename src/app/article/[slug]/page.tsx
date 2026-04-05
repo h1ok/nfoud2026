@@ -4,7 +4,7 @@ import NewsImage from '@/components/NewsImage';
 import { supabaseServer } from '@/lib/supabase';
 import { News } from '@/types/news';
 import { getCategoryLabel, formatTimeAgo, safeKeywords } from '@/lib/utils';
-import { SITE_URL, SITE_NAME } from '@/lib/constants';
+import { SITE_URL, SITE_NAME, TWITTER_HANDLE } from '@/lib/constants';
 import Navbar from '@/components/Navbar';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Footer from '@/components/Footer';
@@ -88,13 +88,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const article = await getArticle(slug);
 
   if (!article) {
-    return { title: 'المقال غير موجود' };
+    return {
+      title: 'المقال غير موجود',
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
   }
 
   const articleUrl = `${SITE_URL}/article/${article.slug || article.id}`;
 
   const seoTitle = `${article.title} | ${getCategoryLabel(article.category)}`;
   const seoDescription = article.meta_description || article.excerpt || article.title;
+  const seoImage = article.image_url ? [article.image_url] : [];
 
   return {
     title: seoTitle,
@@ -108,16 +115,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       url: articleUrl,
       title: seoTitle,
       description: seoDescription,
+      images: seoImage,
       publishedTime: article.created_at,
       modifiedTime: article.updated_at || article.created_at,
       section: getCategoryLabel(article.category),
       tags: safeKeywords(article.keywords),
       authors: article.editors?.name ? [article.editors.name] : [SITE_NAME],
+      siteName: SITE_NAME,
+      locale: 'ar_SA',
     },
     twitter: {
-      card: 'summary_large_image',
+      card: article.image_url ? 'summary_large_image' : 'summary',
+      site: TWITTER_HANDLE,
+      creator: TWITTER_HANDLE,
       title: seoTitle,
       description: seoDescription,
+      images: seoImage,
     },
   };
 }

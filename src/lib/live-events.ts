@@ -36,10 +36,10 @@ type SupabaseLike = {
 
 function buildNewsDetailsUrl(news: Pick<NewsLike, 'id' | 'slug'>) {
   if (news.slug && news.slug.trim().length > 0) {
-    return `/news/${news.slug}`;
+    return `/article/${news.slug}`;
   }
 
-  return `/news/${news.id}`;
+  return `/article/${news.id}`;
 }
 
 function buildLiveUpdateContent(news: Pick<NewsLike, 'id' | 'slug' | 'title' | 'excerpt'>) {

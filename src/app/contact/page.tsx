@@ -1,11 +1,34 @@
 import { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'اتصل بنا',
   description: 'تواصل مع فريق شبكة نفود الإخبارية',
+  alternates: {
+    canonical: `${SITE_URL}/contact`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/contact`,
+    title: `اتصل بنا | ${SITE_NAME}`,
+    description: 'تواصل مع فريق شبكة نفود الإخبارية',
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `اتصل بنا | ${SITE_NAME}`,
+    description: 'تواصل مع فريق شبكة نفود الإخبارية',
+  },
 };
 
 export default function ContactPage() {

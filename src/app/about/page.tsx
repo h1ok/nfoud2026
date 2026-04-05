@@ -1,12 +1,34 @@
 import { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { SITE_NAME } from '@/lib/constants';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { supabaseServer } from '@/lib/supabase';
 
 export const metadata: Metadata = {
   title: 'من نحن',
   description: 'تعرف على شبكة نفود الإخبارية - أول شبكة أخبار سعودية مدعومة بالذكاء الاصطناعي',
+  alternates: {
+    canonical: `${SITE_URL}/about`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/about`,
+    title: `من نحن | ${SITE_NAME}`,
+    description: 'تعرف على شبكة نفود الإخبارية - أول شبكة أخبار سعودية مدعومة بالذكاء الاصطناعي',
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `من نحن | ${SITE_NAME}`,
+    description: 'تعرف على شبكة نفود الإخبارية - أول شبكة أخبار سعودية مدعومة بالذكاء الاصطناعي',
+  },
 };
 
 interface Editor {

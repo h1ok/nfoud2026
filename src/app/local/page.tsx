@@ -5,6 +5,7 @@ import NewsCard from '@/components/NewsCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { Newspaper } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
@@ -14,6 +15,28 @@ export const metadata: Metadata = {
   title: 'الأخبار المحلية – أحداث من داخل المملكة',
   description: 'آخر الأخبار المحلية من مختلف مناطق المملكة العربية السعودية - أحداث وفعاليات محلية على شبكة نفود الإخبارية.',
   keywords: 'محليات، أخبار محلية، السعودية، المدن السعودية، أحداث محلية',
+  alternates: {
+    canonical: `${SITE_URL}/local`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/local`,
+    title: `الأخبار المحلية | ${SITE_NAME}`,
+    description: 'آخر الأخبار المحلية من مختلف مناطق المملكة العربية السعودية - أحداث وفعاليات محلية على شبكة نفود الإخبارية.',
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `الأخبار المحلية | ${SITE_NAME}`,
+    description: 'آخر الأخبار المحلية من مختلف مناطق المملكة العربية السعودية - أحداث وفعاليات محلية على شبكة نفود الإخبارية.',
+  },
 };
 
 async function getLocalNews(): Promise<News[]> {

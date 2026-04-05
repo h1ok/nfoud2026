@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { supabaseServer } from '@/lib/supabase';
 import { News, LiveEvent } from '@/types/news';
 import NewsCard from '@/components/NewsCard';
@@ -5,11 +6,46 @@ import LiveEventCard from '@/components/LiveEventCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { TrendingUp, Newspaper, Globe, Trophy, ChevronLeft, Radio } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: `${SITE_NAME} - أول شبكة أخبار سعودية بالذكاء الاصطناعي`,
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: SITE_URL,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    url: SITE_URL,
+    title: `${SITE_NAME} - أول شبكة أخبار سعودية بالذكاء الاصطناعي`,
+    description: SITE_DESCRIPTION,
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `${SITE_NAME} - أول شبكة أخبار سعودية بالذكاء الاصطناعي`,
+    description: SITE_DESCRIPTION,
+  },
+};
 
 async function getFeaturedNews(): Promise<News[]> {
   try {

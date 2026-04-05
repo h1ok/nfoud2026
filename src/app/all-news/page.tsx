@@ -5,6 +5,7 @@ import NewsCard from '@/components/NewsCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { Newspaper } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
@@ -14,6 +15,28 @@ export const metadata: Metadata = {
   title: 'جميع الأخبار – آخر الأخبار من جميع الأقسام',
   description: 'تصفح جميع الأخبار من مختلف الأقسام - سياسة، اقتصاد، محليات، رياضة على شبكة نفود الإخبارية.',
   keywords: 'أخبار، جميع الأخبار، السعودية، نفود',
+  alternates: {
+    canonical: `${SITE_URL}/all-news`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/all-news`,
+    title: `جميع الأخبار | ${SITE_NAME}`,
+    description: 'تصفح جميع الأخبار من مختلف الأقسام - سياسة، اقتصاد، محليات، رياضة على شبكة نفود الإخبارية.',
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `جميع الأخبار | ${SITE_NAME}`,
+    description: 'تصفح جميع الأخبار من مختلف الأقسام - سياسة، اقتصاد، محليات، رياضة على شبكة نفود الإخبارية.',
+  },
 };
 
 async function getAllNews(): Promise<News[]> {

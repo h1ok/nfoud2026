@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { supabaseServer } from '@/lib/supabase';
 import { LiveEvent } from '@/types/news';
 import { formatDate, getCategoryLabel } from '@/lib/utils';
-import { SITE_URL, SITE_NAME } from '@/lib/constants';
+import { SITE_URL, SITE_NAME, TWITTER_HANDLE } from '@/lib/constants';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Radio, Clock } from 'lucide-react';
@@ -23,11 +23,11 @@ interface LiveEventUpdate {
 
 function buildNewsDetailsUrl(newsId: string | null, slug?: string | null) {
   if (slug && slug.trim().length > 0) {
-    return `/news/${slug}`;
+    return `/article/${slug}`;
   }
 
   if (newsId) {
-    return `/news/${newsId}`;
+    return `/article/${newsId}`;
   }
 
   return null;
@@ -103,19 +103,44 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!event) {
     return {
       title: 'الحدث غير موجود',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
+  const liveEventUrl = `${SITE_URL}/live/${event.id}`;
+  const description = event.summary || event.title;
+  const keywords = `حدث مباشر، ${getCategoryLabel(event.category)}، تغطية حية`;
+
   return {
     title: `${event.title} - تغطية مباشرة`,
-    description: event.summary || event.title,
-    keywords: `حدث مباشر، ${getCategoryLabel(event.category)}، تغطية حية`,
+    description,
+    keywords,
+    alternates: {
+      canonical: liveEventUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
     openGraph: {
       type: 'article',
-      url: `${SITE_URL}/live/${event.id}`,
+      url: liveEventUrl,
       title: event.title,
-      description: event.summary || event.title,
+      description,
       images: event.main_image_url ? [{ url: event.main_image_url }] : [],
+      siteName: SITE_NAME,
+      locale: 'ar_SA',
+    },
+    twitter: {
+      card: event.main_image_url ? 'summary_large_image' : 'summary',
+      site: TWITTER_HANDLE,
+      creator: TWITTER_HANDLE,
+      title: `${event.title} - تغطية مباشرة`,
+      description,
+      images: event.main_image_url ? [event.main_image_url] : [],
     },
   };
 }

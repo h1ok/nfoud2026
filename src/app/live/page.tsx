@@ -5,6 +5,7 @@ import LiveEventCard from '@/components/LiveEventCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { Radio, ChevronLeft } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,28 @@ export const metadata: Metadata = {
   title: 'الأحداث الحية',
   description: 'تابع الأحداث الحية والتغطيات المباشرة للأخبار العاجلة',
   keywords: 'أحداث حية، تغطية مباشرة، أخبار عاجلة',
+  alternates: {
+    canonical: `${SITE_URL}/live`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/live`,
+    title: `الأحداث الحية | ${SITE_NAME}`,
+    description: 'تابع الأحداث الحية والتغطيات المباشرة للأخبار العاجلة على شبكة نفود الإخبارية.',
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `الأحداث الحية | ${SITE_NAME}`,
+    description: 'تابع الأحداث الحية والتغطيات المباشرة للأخبار العاجلة على شبكة نفود الإخبارية.',
+  },
 };
 
 async function getLiveEvents(): Promise<LiveEvent[]> {

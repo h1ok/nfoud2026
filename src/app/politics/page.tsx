@@ -5,6 +5,7 @@ import NewsCard from '@/components/NewsCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { Globe } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
@@ -14,6 +15,28 @@ export const metadata: Metadata = {
   title: 'أخبار السياسة – تحليلات وتغطية سياسية',
   description: 'تابع آخر الأخبار السياسية من السعودية والعالم العربي. تحليلات سياسية معمّقة وتغطية لحظة بلحظة للقرارات الحكومية والتطورات الدولية على شبكة نفود الإخبارية.',
   keywords: 'أخبار سياسية، سياسة السعودية، تحليلات سياسية، قرارات حكومية، أخبار عربية',
+  alternates: {
+    canonical: `${SITE_URL}/politics`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/politics`,
+    title: `أخبار السياسة | ${SITE_NAME}`,
+    description: 'تابع آخر الأخبار السياسية من السعودية والعالم العربي. تحليلات سياسية معمّقة وتغطية لحظة بلحظة للقرارات الحكومية والتطورات الدولية على شبكة نفود الإخبارية.',
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `أخبار السياسة | ${SITE_NAME}`,
+    description: 'تابع آخر الأخبار السياسية من السعودية والعالم العربي. تحليلات سياسية معمّقة وتغطية لحظة بلحظة للقرارات الحكومية والتطورات الدولية على شبكة نفود الإخبارية.',
+  },
 };
 
 async function getPoliticsNews(): Promise<News[]> {

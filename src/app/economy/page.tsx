@@ -5,6 +5,7 @@ import NewsCard from '@/components/NewsCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { TrendingUp } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
@@ -14,6 +15,28 @@ export const metadata: Metadata = {
   title: 'أخبار الاقتصاد – تحليلات وتقارير اقتصادية',
   description: 'آخر الأخبار الاقتصادية من المملكة العربية السعودية والعالم - تحليلات اقتصادية ومالية شاملة على شبكة نفود الإخبارية.',
   keywords: 'اقتصاد، أخبار اقتصادية، مال وأعمال، السعودية، رؤية 2030',
+  alternates: {
+    canonical: `${SITE_URL}/economy`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/economy`,
+    title: `أخبار الاقتصاد | ${SITE_NAME}`,
+    description: 'آخر الأخبار الاقتصادية من المملكة العربية السعودية والعالم - تحليلات اقتصادية ومالية شاملة على شبكة نفود الإخبارية.',
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `أخبار الاقتصاد | ${SITE_NAME}`,
+    description: 'آخر الأخبار الاقتصادية من المملكة العربية السعودية والعالم - تحليلات اقتصادية ومالية شاملة على شبكة نفود الإخبارية.',
+  },
 };
 
 async function getEconomyNews(): Promise<News[]> {

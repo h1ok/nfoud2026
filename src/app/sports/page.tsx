@@ -5,6 +5,7 @@ import NewsCard from '@/components/NewsCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { Trophy } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
@@ -14,6 +15,28 @@ export const metadata: Metadata = {
   title: 'الأخبار الرياضية – كرة القدم والرياضات',
   description: 'آخر الأخبار الرياضية من السعودية والعالم - دوري روشن، كرة القدم، والرياضات المختلفة على شبكة نفود الإخبارية.',
   keywords: 'رياضة، كرة قدم، أخبار رياضية، السعودية، دوري روشن',
+  alternates: {
+    canonical: `${SITE_URL}/sports`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/sports`,
+    title: `الأخبار الرياضية | ${SITE_NAME}`,
+    description: 'آخر الأخبار الرياضية من السعودية والعالم - دوري روشن، كرة القدم، والرياضات المختلفة على شبكة نفود الإخبارية.',
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `الأخبار الرياضية | ${SITE_NAME}`,
+    description: 'آخر الأخبار الرياضية من السعودية والعالم - دوري روشن، كرة القدم، والرياضات المختلفة على شبكة نفود الإخبارية.',
+  },
 };
 
 async function getSportsNews(): Promise<News[]> {
