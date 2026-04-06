@@ -1,53 +1,76 @@
 import { Metadata } from 'next';
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase';
 import { News, LiveEvent } from '@/types/news';
 import NewsCard from '@/components/NewsCard';
 import LiveEventCard from '@/components/LiveEventCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { TrendingUp, Newspaper, Globe, Trophy, ChevronLeft, Radio } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from '@/lib/constants';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
+  title: `${SITE_NAME} - أول شبكة أخبار سعودية بالذكاء الاصطناعي`,
+  description: SITE_DESCRIPTION,
   alternates: {
     canonical: SITE_URL,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    url: SITE_URL,
+    title: `${SITE_NAME} - أول شبكة أخبار سعودية بالذكاء الاصطناعي`,
+    description: SITE_DESCRIPTION,
+    siteName: SITE_NAME,
+    locale: 'ar_SA',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
+    title: `${SITE_NAME} - أول شبكة أخبار سعودية بالذكاء الاصطناعي`,
+    description: SITE_DESCRIPTION,
   },
 };
 
 async function getFeaturedNews(): Promise<News[]> {
   try {
-    const { data: linkedNews } = await supabase
+    const { data: linkedNews } = await supabaseServer
       .from('live_event_updates')
       .select('source_news_id, live_events!inner(status)')
       .not('source_news_id', 'is', null)
       .eq('live_events.status', 'active');
 
-    const linkedNewsIds = Array.from(new Set(linkedNews?.map((item: any) => item.source_news_id).filter(Boolean) || []));
+    const linkedNewsIds = linkedNews?.map((item: any) => item.source_news_id).filter(Boolean) || [];
 
-    const query = supabase
+    const query = supabaseServer
       .from('news')
-      .select('*') // Removed ', editors(name, position)' as relationship is missing
+      .select('*, editors(name, position)')
       .order('created_at', { ascending: false })
       .limit(20);
 
-    // If there are too many linkedNewsIds, it causes a Headers Overflow Error in the HTTP request.
-    // We limit the exclude list to a reasonable number to prevent the URL from getting too long.
-    // UUIDs are ~36 chars long, so 20 of them is ~720 chars, which is very safe.
-    const safeLinkedNewsIds = linkedNewsIds.slice(0, 20);
-
-    if (safeLinkedNewsIds.length > 0) {
-      query.not('id', 'in', `(${safeLinkedNewsIds.join(',')})`);
+    if (linkedNewsIds.length > 0) {
+      query.not('id', 'in', `(${linkedNewsIds.join(',')})`);
     }
 
     const { data, error } = await query;
     
     if (error) {
-      console.error('Error fetching news:', JSON.stringify(error, null, 2));
+      console.error('Error fetching news:', error);
       return [];
     }
 
@@ -60,15 +83,15 @@ async function getFeaturedNews(): Promise<News[]> {
 
 async function getLiveEvents(): Promise<LiveEvent[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServer
       .from('live_events')
-      .select('*') // Removed ', live_event_updates(count)' as relationship is missing
+      .select('*, live_event_updates(count)')
       .eq('status', 'active')
       .order('updated_at', { ascending: false })
       .limit(3);
 
     if (error) {
-      console.error('Error fetching live events:', JSON.stringify(error, null, 2));
+      console.error('Error fetching live events:', error);
       return [];
     }
 
@@ -103,68 +126,54 @@ export default async function Home() {
       <NewsTickerWrapper />
       
       {/* Hero Section */}
-      <header className="relative h-[85vh] min-h-[600px] overflow-hidden">
+      <header className="relative h-[400px] sm:h-[500px] md:h-[600px] overflow-hidden">
         <div className="absolute inset-0">
           <Image
             src="/nafud-desert-hero.jpg"
             alt="صورة خلفية لصحراء النفود"
             fill
-            className="object-cover scale-105 animate-pulse-slow"
+            className="object-cover"
             priority
-            quality={85}
-            sizes="100vw"
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q=="
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-primary/90 to-primary/60"></div>
-          {/* Decorative CSS Pattern overlay */}
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/80 to-transparent"></div>
         </div>
-        <div className="relative container mx-auto px-4 h-full flex items-center justify-center text-center">
-          <div className="text-white max-w-5xl mt-16">
-            <span className="inline-block px-6 py-3 bg-accent text-accent-foreground rounded-2xl text-sm font-black mb-8 animate-fade-in shadow-xl tracking-wider uppercase">
-              أول شبكة سعودية تعمل بالذكاء الاصطناعي
+        <div className="relative container mx-auto px-4 h-full flex items-center">
+          <div className="text-white max-w-4xl">
+            <span className="inline-block px-5 py-2.5 bg-accent/90 text-accent-foreground rounded-full text-sm font-extrabold mb-6 animate-fade-in backdrop-blur-sm tracking-wide">
+              أخبار حصرية وموثوقة مدعومة بالذكاء الاصطناعي
             </span>
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-gold-light via-gold to-gold-dark animate-fade-in leading-[1.2]" style={{ animationDelay: '0.1s' }}>
-              نفود الإخبارية
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-4 md:mb-6 text-gold animate-fade-in leading-[1.15]" style={{ animationDelay: '0.1s' }}>
+              نفود – شبكة أخبار سعودية بالذكاء الاصطناعي
             </h1>
-            <p className="text-2xl md:text-4xl mb-8 animate-fade-in font-bold text-white/95" style={{ animationDelay: '0.2s' }}>
-              دقة في نقل الحدث.. وموضوعية في التحليل
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-4 md:mb-6 animate-fade-in font-bold text-white/95" style={{ animationDelay: '0.2s' }}>
+              آخر الأخبار والتحليلات من المملكة والعالم
             </p>
-            <p className="text-lg md:text-2xl mb-12 text-white/80 leading-relaxed animate-fade-in max-w-3xl mx-auto font-medium" style={{ animationDelay: '0.3s' }}>
+            <p className="hidden sm:block text-base md:text-lg lg:text-xl mb-6 md:mb-8 text-white/80 leading-loose animate-fade-in max-w-2xl font-medium" style={{ animationDelay: '0.3s' }}>
               منصة إخبارية سعودية تجمع بين الموثوقية الصحفية وتقنيات الذكاء الاصطناعي لتقديم أحدث الأخبار السياسية والاقتصادية والمحلية والرياضية بأسلوب عصري واحترافي
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
-              <Link href="#featured-news-heading" className="px-8 py-4 bg-gradient-to-r from-gold-dark to-gold text-accent-foreground font-black text-lg rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-                تصفح أحدث الأخبار
-              </Link>
-              <Link href="#live-events-heading" className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-white/20 hover:scale-105 transition-all">
-                التغطيات الحية
-              </Link>
-            </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent"></div>
       </header>
 
       {/* Categories Quick Access */}
-      <nav className="py-12 -mt-20 relative z-10" aria-label="الوصول السريع للأقسام">
+      <nav className="py-6 sm:py-8 md:py-12 -mt-8 sm:-mt-12 md:-mt-16 relative z-10" aria-label="الوصول السريع للأقسام">
         <div className="container mx-auto px-4">
           <h2 className="sr-only">أقسام الأخبار</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {categories.map((category, index) => {
               const IconComponent = iconMap[category.icon];
               return (
                 <Link
                   key={category.name}
                   href={category.link}
-                  className="flex flex-col md:flex-row-reverse items-center justify-center gap-3 md:gap-4 bg-card/90 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-border shadow-elegant hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group animate-slide-up"
+                  className="flex flex-row-reverse items-center justify-center gap-2 sm:gap-3 md:gap-4 bg-card p-4 sm:p-6 md:p-8 rounded-xl md:rounded-2xl border border-border/50 shadow-elegant hover:shadow-xl transition-all duration-300 group animate-slide-up"
                   style={{ animationDelay: `${index * 0.1}s` }}
                   aria-label={`الانتقال إلى قسم ${category.name}`}
                 >
-                  <span className="text-xl md:text-2xl font-black group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-gold-dark group-hover:to-gold transition-all">{category.name}</span>
-                  <div className="p-4 md:p-5 bg-secondary/50 rounded-2xl group-hover:bg-accent/10 group-hover:scale-110 transition-all duration-500">
-                    <IconComponent className={`${category.color} drop-shadow-md`} size={32} aria-hidden="true" />
+                  <span className="text-sm sm:text-base md:text-lg font-bold group-hover:text-gold transition-colors">{category.name}</span>
+                  <div className="p-2 sm:p-3 md:p-4 bg-secondary rounded-full group-hover:bg-accent/10 transition-colors">
+                    <IconComponent className={`${category.color} group-hover:scale-110 transition-transform duration-300`} size={24} aria-hidden="true" />
                   </div>
                 </Link>
               );
@@ -174,15 +183,15 @@ export default async function Home() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-16">
+      <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
         {/* Live Events Section */}
-        <section className="mb-20" aria-labelledby="live-events-heading">
-          <header className="flex items-center mb-12">
-            <div className="flex items-center gap-4 flex-1">
+        <section className="mb-12 md:mb-20" aria-labelledby="live-events-heading">
+          <header className="flex items-center mb-6 md:mb-12">
+            <div className="flex items-center gap-3 md:gap-4 flex-1">
               <div className="p-2 bg-destructive/10 rounded-full">
-                <Radio className="w-6 h-6 text-destructive animate-pulse" aria-hidden="true" />
+                <Radio className="w-5 h-5 md:w-6 md:h-6 text-destructive animate-pulse" aria-hidden="true" />
               </div>
-              <h2 id="live-events-heading" className="text-4xl font-bold text-foreground">تغطيات حية</h2>
+              <h2 id="live-events-heading" className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">تغطيات حية</h2>
               <div className="h-1.5 flex-1 bg-gradient-to-r from-destructive/50 to-transparent rounded-full" aria-hidden="true"></div>
             </div>
           </header>
@@ -239,16 +248,16 @@ export default async function Home() {
         </section>
 
         {/* Featured News Section */}
-        <section className="mb-20" aria-labelledby="featured-news-heading">
-          <header className="flex items-center mb-12">
-            <div className="flex items-center gap-4 flex-1">
+        <section className="mb-12 md:mb-20" aria-labelledby="featured-news-heading">
+          <header className="flex items-center mb-6 md:mb-12">
+            <div className="flex items-center gap-3 md:gap-4 flex-1">
               <div className="h-1.5 w-16 gradient-gold rounded-full" aria-hidden="true"></div>
               <h2 id="featured-news-heading" className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">أحدث الأخبار</h2>
               <div className="h-1.5 flex-1 bg-gradient-to-r from-gold/50 to-transparent rounded-full" aria-hidden="true"></div>
             </div>
           </header>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {featuredNews.length === 0 ? (
               <div className="col-span-3 text-center py-20">
                 <p className="text-xl text-muted-foreground">لا توجد أخبار متاحة حالياً</p>
@@ -271,20 +280,20 @@ export default async function Home() {
         </section>
 
         {/* Newsletter CTA */}
-        <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-xl mb-16" aria-labelledby="newsletter-heading">
+        <section className="relative overflow-hidden rounded-2xl md:rounded-3xl shadow-xl mb-10 md:mb-16" aria-labelledby="newsletter-heading">
           <div className="absolute inset-0 gradient-gold opacity-95" aria-hidden="true"></div>
-          <div className="relative p-8 sm:p-12 md:p-16 text-center">
-            <h2 id="newsletter-heading" className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-primary">اشترك في النشرة الإخبارية</h2>
-            <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto text-primary/90 leading-relaxed">
+          <div className="relative p-6 sm:p-10 md:p-16 text-center">
+            <h2 id="newsletter-heading" className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 md:mb-6 text-primary">اشترك في النشرة الإخبارية</h2>
+            <p className="text-base sm:text-lg md:text-xl mb-6 md:mb-10 max-w-2xl mx-auto text-primary/90 leading-relaxed">
               اشترك في نشرتنا الإخبارية للحصول على آخر الأخبار والتحليلات مباشرة في بريدك الإلكتروني
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 max-w-lg mx-auto">
               <input
                 type="email"
                 placeholder="بريدك الإلكتروني"
-                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl text-foreground border-2 border-transparent focus:border-primary focus:outline-none shadow-md text-base sm:text-lg"
+                className="flex-1 px-4 md:px-6 py-3 md:py-4 rounded-xl text-foreground border-2 border-transparent focus:border-primary focus:outline-none shadow-md text-base md:text-lg"
               />
-              <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+              <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 md:px-10 py-3 md:py-4 text-base md:text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap">
                 اشترك الآن
               </button>
             </div>
@@ -292,22 +301,22 @@ export default async function Home() {
         </section>
 
         {/* Quick Links Section */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-          <Link href="/politics" className="block p-6 bg-card rounded-xl border border-border/50 hover:border-gold/50 hover:shadow-lg transition-all group">
-            <h3 className="text-xl font-bold mb-2 group-hover:text-gold transition-colors">الأخبار السياسية</h3>
-            <p className="text-sm text-muted-foreground">آخر التطورات السياسية</p>
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-10 md:mb-16">
+          <Link href="/politics" className="block p-4 md:p-6 bg-card rounded-xl border border-border/50 hover:border-gold/50 hover:shadow-lg transition-all group">
+            <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2 group-hover:text-gold transition-colors">الأخبار السياسية</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">آخر التطورات السياسية</p>
           </Link>
-          <Link href="/economy" className="block p-6 bg-card rounded-xl border border-border/50 hover:border-gold/50 hover:shadow-lg transition-all group">
-            <h3 className="text-xl font-bold mb-2 group-hover:text-gold transition-colors">الأخبار الاقتصادية</h3>
-            <p className="text-sm text-muted-foreground">تقارير اقتصادية شاملة</p>
+          <Link href="/economy" className="block p-4 md:p-6 bg-card rounded-xl border border-border/50 hover:border-gold/50 hover:shadow-lg transition-all group">
+            <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2 group-hover:text-gold transition-colors">الأخبار الاقتصادية</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">تقارير اقتصادية شاملة</p>
           </Link>
-          <Link href="/local" className="block p-6 bg-card rounded-xl border border-border/50 hover:border-gold/50 hover:shadow-lg transition-all group">
-            <h3 className="text-xl font-bold mb-2 group-hover:text-gold transition-colors">الأخبار المحلية</h3>
-            <p className="text-sm text-muted-foreground">أخبار من داخل المملكة</p>
+          <Link href="/local" className="block p-4 md:p-6 bg-card rounded-xl border border-border/50 hover:border-gold/50 hover:shadow-lg transition-all group">
+            <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2 group-hover:text-gold transition-colors">الأخبار المحلية</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">أخبار من داخل المملكة</p>
           </Link>
-          <Link href="/sports" className="block p-6 bg-card rounded-xl border border-border/50 hover:border-gold/50 hover:shadow-lg transition-all group">
-            <h3 className="text-xl font-bold mb-2 group-hover:text-gold transition-colors">الأخبار الرياضية</h3>
-            <p className="text-sm text-muted-foreground">كل ما يخص الرياضة</p>
+          <Link href="/sports" className="block p-4 md:p-6 bg-card rounded-xl border border-border/50 hover:border-gold/50 hover:shadow-lg transition-all group">
+            <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2 group-hover:text-gold transition-colors">الأخبار الرياضية</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">كل ما يخص الرياضة</p>
           </Link>
         </section>
       </main>

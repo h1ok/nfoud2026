@@ -1,118 +1,84 @@
-import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Newspaper, Radio, TrendingUp, Eye } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Newspaper, Radio, ArrowLeft, ChartColumn } from 'lucide-react';
+import { supabaseServer } from '@/lib/supabase';
 
-async function getDashboardStats() {
-  const [newsCount, liveEventsCount, recentNews] = await Promise.all([
-    supabase.from('news').select('*', { count: 'exact', head: true }),
-    supabase.from('live_events').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-    supabase.from('news').select('id, title, created_at, category').order('created_at', { ascending: false }).limit(5),
+async function getStats() {
+  const [{ count: newsCount }, { count: liveEventsCount }, { data: latestNews }] = await Promise.all([
+    supabaseServer.from('news').select('*', { count: 'exact', head: true }),
+    supabaseServer.from('live_events').select('*', { count: 'exact', head: true }),
+    supabaseServer.from('news').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
 
   return {
-    totalNews: newsCount.count || 0,
-    activeLiveEvents: liveEventsCount.count || 0,
-    recentNews: recentNews.data || [],
+    newsCount: newsCount ?? 0,
+    liveEventsCount: liveEventsCount ?? 0,
+    latestNewsDate: latestNews?.created_at ?? null,
   };
 }
 
-export default async function DashboardPage() {
-  const stats = await getDashboardStats();
+export default async function DashboardHomePage() {
+  const stats = await getStats();
 
   return (
-    <div className="space-y-8">
+    <section className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold mb-2">لوحة التحكم</h1>
-        <p className="text-muted-foreground">مرحباً بك في نظام إدارة محتوى نفود الإخبارية</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground">لوحة التحكم</h2>
+        <p className="mt-2 text-muted-foreground">اختر القسم الذي تريد إدارته.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي الأخبار</CardTitle>
-            <Newspaper className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.totalNews}</div>
-            <p className="text-xs text-muted-foreground mt-1">جميع الأخبار المنشورة</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الأحداث الحية</CardTitle>
-            <Radio className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.activeLiveEvents}</div>
-            <p className="text-xs text-muted-foreground mt-1">التغطيات النشطة حالياً</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الإحصائيات</CardTitle>
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">+12%</div>
-            <p className="text-xs text-muted-foreground mt-1">نمو هذا الشهر</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>آخر الأخبار المنشورة</CardTitle>
-            <CardDescription>آخر 5 أخبار تم نشرها</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats.recentNews.map((news) => (
-                <div key={news.id} className="flex items-start justify-between border-b pb-3 last:border-0">
-                  <div className="flex-1">
-                    <h3 className="font-medium line-clamp-2">{news.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {new Date(news.created_at).toLocaleDateString('ar-SA')}
-                    </p>
-                  </div>
-                  <span className="text-xs bg-secondary px-2 py-1 rounded mr-3">{news.category}</span>
-                </div>
-              ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <Link href="/dashboard-control-panel-2025/news" className="rounded-2xl border border-border bg-card p-6 shadow-sm transition hover:border-gold/50 hover:shadow-md">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">إجمالي الأخبار</p>
+              <h3 className="mt-2 text-3xl font-bold text-foreground">{stats.newsCount}</h3>
+              <p className="mt-4 text-foreground font-medium">إدارة الأخبار</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="rounded-2xl bg-secondary p-3 text-gold">
+              <Newspaper size={28} />
+            </div>
+          </div>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm text-gold font-medium">
+            <span>فتح القسم</span>
+            <ArrowLeft size={16} />
+          </div>
+        </Link>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>إجراءات سريعة</CardTitle>
-            <CardDescription>الوصول السريع للمهام الشائعة</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Link href="/dashboard-control-panel-2025/news/new">
-              <Button className="w-full justify-start" size="lg">
-                <Newspaper className="ml-2 h-5 w-5" />
-                إضافة خبر جديد
-              </Button>
-            </Link>
-            <Link href="/dashboard-control-panel-2025/news">
-              <Button variant="outline" className="w-full justify-start" size="lg">
-                <Eye className="ml-2 h-5 w-5" />
-                عرض جميع الأخبار
-              </Button>
-            </Link>
-            <Link href="/dashboard-control-panel-2025/statistics">
-              <Button variant="outline" className="w-full justify-start" size="lg">
-                <TrendingUp className="ml-2 h-5 w-5" />
-                عرض الإحصائيات
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <Link href="/dashboard-control-panel-2025/statistics" className="rounded-2xl border border-border bg-card p-6 shadow-sm transition hover:border-gold/50 hover:shadow-md">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">آخر تحديث إحصائي</p>
+              <h3 className="mt-2 text-3xl font-bold text-foreground">{stats.newsCount}</h3>
+              <p className="mt-4 text-foreground font-medium">إحصائيات الأخبار</p>
+              <p className="mt-2 text-xs text-muted-foreground">{stats.latestNewsDate ? new Date(stats.latestNewsDate).toLocaleDateString('ar-SA') : 'لا توجد بيانات كافية'}</p>
+            </div>
+            <div className="rounded-2xl bg-secondary p-3 text-primary">
+              <ChartColumn size={28} />
+            </div>
+          </div>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm text-gold font-medium">
+            <span>عرض الإحصائيات</span>
+            <ArrowLeft size={16} />
+          </div>
+        </Link>
+
+        <Link href="/dashboard-control-panel-2025/live-events" className="rounded-2xl border border-border bg-card p-6 shadow-sm transition hover:border-gold/50 hover:shadow-md">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">إجمالي الأحداث الحية</p>
+              <h3 className="mt-2 text-3xl font-bold text-foreground">{stats.liveEventsCount}</h3>
+              <p className="mt-4 text-foreground font-medium">الأحداث الحية</p>
+            </div>
+            <div className="rounded-2xl bg-secondary p-3 text-destructive">
+              <Radio size={28} />
+            </div>
+          </div>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm text-gold font-medium">
+            <span>فتح القسم</span>
+            <ArrowLeft size={16} />
+          </div>
+        </Link>
       </div>
-    </div>
+    </section>
   );
 }

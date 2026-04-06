@@ -73,6 +73,15 @@
   --navy-light: 217 33% 17%;
 }
 
+ html,
+ body,
+ button,
+ input,
+ textarea,
+ select {
+   font-family: var(--font-cairo), system-ui, sans-serif;
+ }
+
 * {
   border-color: hsl(var(--border));
 }
@@ -84,18 +93,6 @@ body {
 
 html {
   scroll-behavior: smooth;
-}
-
-@utility text-gold {
-  color: hsl(var(--gold));
-}
-
-@utility border-gold {
-  border-color: hsl(var(--gold));
-}
-
-@utility bg-gold {
-  background-color: hsl(var(--gold));
 }
 
 @utility gradient-gold {
@@ -165,6 +162,7 @@ html {
   line-height: 1.75;
   
   & h1, & h2, & h3, & h4, & h5, & h6 {
+    color: hsl(var(--foreground));
     font-weight: 700;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
@@ -176,28 +174,49 @@ html {
   & h3 { font-size: 1.25em; }
   
   & p {
+    color: hsl(var(--foreground));
     margin-top: 0.75em;
     margin-bottom: 0.75em;
+    line-height: 2;
+    font-size: 1.25rem;
+    text-align: justify;
   }
   
   & a {
     color: hsl(var(--gold));
-    text-decoration: underline;
+    text-decoration: none;
     font-weight: 500;
+    &:hover {
+      color: hsl(var(--gold) / 0.8);
+    }
   }
   
-  & strong { font-weight: 700; }
+  & strong {
+    color: hsl(var(--foreground));
+    font-weight: 700;
+  }
+  
+  & em {
+    font-style: italic;
+    color: hsl(var(--foreground));
+  }
   
   & ul, & ol {
     padding-inline-start: 1.5em;
     margin-top: 0.75em;
-    margin-bottom: 0.75em;
+    margin-bottom: 1rem;
   }
   
   & ul { list-style-type: disc; }
   & ol { list-style-type: decimal; }
   
-  & li { margin-top: 0.25em; margin-bottom: 0.25em; }
+  & li {
+    color: hsl(var(--foreground));
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    line-height: 2;
+    font-size: 1.25rem;
+  }
   
   & blockquote {
     border-inline-start: 4px solid hsl(var(--gold));
@@ -205,14 +224,19 @@ html {
     margin-inline-start: 0;
     font-style: italic;
     color: hsl(var(--muted-foreground));
+    background-color: hsl(var(--secondary) / 0.3);
+    border-radius: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
   }
   
   & img {
     max-width: 100%;
     height: auto;
     border-radius: 0.5rem;
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
   }
   
   & pre {
@@ -254,8 +278,16 @@ html {
     font-weight: 700;
     background-color: hsl(var(--muted));
   }
+  
+  & * {
+    text-align: right;
+  }
 }
 
 @utility prose-lg {
   font-size: 1.125rem;
+}
+
+@utility prose-2xl {
+  font-size: 1.5rem;
 }

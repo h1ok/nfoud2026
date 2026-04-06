@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'vraxaknyauqlnyardhla.supabase.co',
+        hostname: 'wqcikbeglxfptnaamnpj.supabase.co',
       },
       {
         protocol: 'https',
@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
-  allowedDevOrigins: ['localhost', '127.0.0.1'],
+  allowedDevOrigins: ['localhost', '127.0.0.1', '192.168.8.132', '192.168.237.128'],
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,

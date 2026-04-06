@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
       <main className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="text-center max-w-2xl">
-          <h1 className="text-9xl font-bold text-gray-300 mb-4">404</h1>
-          <h2 className="text-3xl font-bold mb-4">الصفحة غير موجودة</h2>
-          <p className="text-gray-600 mb-8 text-lg">
+          <h1 className="text-9xl font-bold text-muted-foreground/30 mb-4">404</h1>
+          <h2 className="text-3xl font-bold mb-4 text-foreground">الصفحة غير موجودة</h2>
+          <p className="text-muted-foreground mb-8 text-lg">
             عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها إلى موقع آخر.
           </p>
           

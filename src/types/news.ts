@@ -32,3 +32,12 @@ export interface LiveEvent {
   updated_at: string;
   updates_count?: number;
 }
+
+export interface LiveEventUpdate {
+  id: string;
+  live_event_id: string;
+  content: string;
+  created_at: string;
+  update_type: string;
+  source_news_id: string | null;
+}

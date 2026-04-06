@@ -7,14 +7,35 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard-control-panel-2025/', '/auth/', '/init-super-admin/'],
+        disallow: [
+          '/dashboard-control-panel-2025/',
+          '/auth/',
+          '/init-super-admin/',
+          '/api/',
+          '/_next/',
+        ],
       },
       {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: ['/dashboard-control-panel-2025/', '/auth/', '/init-super-admin/'],
+        disallow: [
+          '/dashboard-control-panel-2025/',
+          '/auth/',
+          '/init-super-admin/',
+          '/api/',
+        ],
+      },
+      {
+        userAgent: 'Googlebot-News',
+        allow: '/',
+        disallow: [
+          '/dashboard-control-panel-2025/',
+          '/auth/',
+          '/init-super-admin/',
+        ],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }

@@ -1,193 +1,206 @@
-import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Newspaper, Radio, Eye, TrendingUp, Calendar, BarChart3 } from 'lucide-react';
+import { supabaseServer } from '@/lib/supabase';
+import NewsStatisticsDashboard from '@/components/NewsStatisticsDashboard';
 
-async function getStatistics() {
-  const [
-    newsStats,
-    liveEventsStats,
-    newsByCategory,
-    recentActivity,
-  ] = await Promise.all([
-    supabase.from('news').select('*', { count: 'exact', head: true }),
-    supabase.from('live_events').select('*', { count: 'exact' }),
-    supabase.from('news').select('category'),
-    supabase.from('news').select('id, title, created_at, category').order('created_at', { ascending: false }).limit(10),
-  ]);
+const DASHBOARD_TIME_ZONE = 'Asia/Riyadh';
+const STATS_BATCH_SIZE = 1000;
 
-  const categoryCounts = (newsByCategory.data || []).reduce((acc: any, item: any) => {
-    acc[item.category] = (acc[item.category] || 0) + 1;
-    return acc;
-  }, {});
+type NewsRecord = {
+  id: string;
+  created_at: string;
+  category: string | null;
+};
 
-  const activeLiveEvents = (liveEventsStats.data || []).filter((e: any) => e.status === 'active').length;
-  const endedLiveEvents = (liveEventsStats.data || []).filter((e: any) => e.status === 'ended').length;
+type MonthlyBucket = {
+  key: string;
+  label: string;
+  count: number;
+};
 
-  const now = new Date();
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-  const newsThisMonth = (recentActivity.data || []).filter(
-    (n: any) => new Date(n.created_at) >= lastMonth
-  ).length;
+function getTimeZoneYearMonthParts(date: Date) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: DASHBOARD_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+  });
 
+  const parts = formatter.formatToParts(date);
+  const year = Number(parts.find((part) => part.type === 'year')?.value ?? '0');
+  const month = Number(parts.find((part) => part.type === 'month')?.value ?? '1');
+
+  return { year, month };
+}
+
+function shiftYearMonth(year: number, month: number, offset: number) {
+  const shifted = new Date(Date.UTC(year, month - 1 + offset, 1));
   return {
-    totalNews: newsStats.count || 0,
-    totalLiveEvents: liveEventsStats.count || 0,
-    activeLiveEvents,
-    endedLiveEvents,
-    categoryCounts,
-    newsThisMonth,
-    recentActivity: recentActivity.data || [],
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
   };
 }
 
-const categoryLabels: Record<string, string> = {
-  politics: 'سياسة',
-  economy: 'اقتصاد',
-  local: 'محليات',
-  sports: 'رياضة',
-  technology: 'تقنية',
-  culture: 'ثقافة',
-};
+function getMonthKeyFromParts(year: number, month: number) {
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
 
-export default async function StatisticsPage() {
+function getMonthKey(date: Date) {
+  const { year, month } = getTimeZoneYearMonthParts(date);
+  return getMonthKeyFromParts(year, month);
+}
+
+function getMonthLabel(date: Date) {
+  return new Intl.DateTimeFormat('ar-SA', { timeZone: DASHBOARD_TIME_ZONE, month: 'long', year: 'numeric' }).format(date);
+}
+
+function createLastMonths(count: number) {
+  const months: MonthlyBucket[] = [];
+  const now = new Date();
+  const currentParts = getTimeZoneYearMonthParts(now);
+
+  for (let index = count - 1; index >= 0; index -= 1) {
+    const monthParts = shiftYearMonth(currentParts.year, currentParts.month, -index);
+    const date = new Date(Date.UTC(monthParts.year, monthParts.month - 1, 1));
+    months.push({
+      key: getMonthKeyFromParts(monthParts.year, monthParts.month),
+      label: getMonthLabel(date),
+      count: 0,
+    });
+  }
+
+  return months;
+}
+
+function createMonthsBetween(startKey: string, endKey: string) {
+  const [startYear, startMonth] = startKey.split('-').map(Number);
+  const [endYear, endMonth] = endKey.split('-').map(Number);
+  const months: MonthlyBucket[] = [];
+
+  let currentYear = startYear;
+  let currentMonth = startMonth;
+
+  while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
+    const date = new Date(Date.UTC(currentYear, currentMonth - 1, 1));
+    months.push({
+      key: getMonthKeyFromParts(currentYear, currentMonth),
+      label: getMonthLabel(date),
+      count: 0,
+    });
+
+    currentMonth += 1;
+    if (currentMonth > 12) {
+      currentMonth = 1;
+      currentYear += 1;
+    }
+  }
+
+  return months;
+}
+
+function formatPercentage(value: number) {
+  if (!Number.isFinite(value)) {
+    return '0%';
+  }
+
+  const rounded = Math.round(value * 10) / 10;
+  const prefix = rounded > 0 ? '+' : '';
+  return `${prefix}${rounded}%`;
+}
+
+async function getStatistics() {
+  const { count: totalNewsCount, error: totalNewsCountError } = await supabaseServer
+    .from('news')
+    .select('*', { count: 'exact', head: true });
+
+  if (totalNewsCountError) {
+    console.error('Dashboard statistics count failed:', totalNewsCountError);
+    return {
+      totalNews: 0,
+      currentMonthCount: 0,
+      previousMonthCount: 0,
+      growthRate: 0,
+      averagePerMonth: 0,
+      topCategory: 'غير محدد',
+      categoriesCount: 0,
+      monthsWithContent: 0,
+      maxCount: 1,
+      monthlyStats: createLastMonths(6),
+    };
+  }
+
+  const totalNews = totalNewsCount ?? 0;
+  const records: NewsRecord[] = [];
+
+  for (let from = 0; from < totalNews; from += STATS_BATCH_SIZE) {
+    const to = Math.min(from + STATS_BATCH_SIZE - 1, totalNews - 1);
+    const { data, error } = await supabaseServer
+      .from('news')
+      .select('id, created_at, category')
+      .order('created_at', { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      console.error('Dashboard statistics fetch failed:', error);
+      return {
+        totalNews: 0,
+        currentMonthCount: 0,
+        previousMonthCount: 0,
+        growthRate: 0,
+        averagePerMonth: 0,
+        topCategory: 'غير محدد',
+        categoriesCount: 0,
+        monthsWithContent: 0,
+        maxCount: 1,
+        monthlyStats: createLastMonths(6),
+      };
+    }
+
+    records.push(...((data ?? []) as NewsRecord[]));
+  }
+
+  const firstRecordDate = records[0] ? new Date(records[0].created_at) : null;
+  const lastRecordDate = records[records.length - 1] ? new Date(records[records.length - 1].created_at) : null;
+  const monthlyStats = firstRecordDate && lastRecordDate
+    ? createMonthsBetween(getMonthKey(firstRecordDate), getMonthKey(lastRecordDate))
+    : createLastMonths(6);
+  const monthlyLookup = new Map(monthlyStats.map((item) => [item.key, item]));
+  const categoryCounts = new Map<string, number>();
+
+  for (const record of records) {
+    const createdAt = new Date(record.created_at);
+    const monthKey = getMonthKey(createdAt);
+    const existingMonth = monthlyLookup.get(monthKey);
+
+    if (existingMonth) {
+      existingMonth.count += 1;
+    }
+
+    const normalizedCategory = record.category?.trim() || 'غير مصنف';
+    categoryCounts.set(normalizedCategory, (categoryCounts.get(normalizedCategory) ?? 0) + 1);
+  }
+
+  const currentMonth = monthlyStats[monthlyStats.length - 1]?.count ?? 0;
+  const previousMonth = monthlyStats[monthlyStats.length - 2]?.count ?? 0;
+  const growthRate = previousMonth === 0 ? (currentMonth > 0 ? 100 : 0) : ((currentMonth - previousMonth) / previousMonth) * 100;
+  const monthsWithContent = monthlyStats.filter((item) => item.count > 0).length;
+  const averagePerMonth = monthlyStats.length > 0 ? totalNews / monthlyStats.length : 0;
+  const topCategoryEntry = [...categoryCounts.entries()].sort((left, right) => right[1] - left[1])[0];
+  const maxCount = Math.max(...monthlyStats.map((item) => item.count), 1);
+
+  return {
+    totalNews,
+    currentMonthCount: currentMonth,
+    previousMonthCount: previousMonth,
+    growthRate,
+    averagePerMonth,
+    topCategory: topCategoryEntry?.[0] ?? 'غير محدد',
+    categoriesCount: categoryCounts.size,
+    monthsWithContent,
+    maxCount,
+    monthlyStats,
+  };
+}
+
+export default async function DashboardStatisticsPage() {
   const stats = await getStatistics();
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">الإحصائيات</h1>
-        <p className="text-muted-foreground">نظرة شاملة على أداء الموقع</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي الأخبار</CardTitle>
-            <Newspaper className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.totalNews}</div>
-            <p className="text-xs text-muted-foreground mt-1">جميع الأخبار المنشورة</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">أخبار هذا الشهر</CardTitle>
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.newsThisMonth}</div>
-            <p className="text-xs text-muted-foreground mt-1">آخر 30 يوم</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">أحداث حية نشطة</CardTitle>
-            <Radio className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.activeLiveEvents}</div>
-            <p className="text-xs text-muted-foreground mt-1">من أصل {stats.totalLiveEvents} حدث</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">أحداث منتهية</CardTitle>
-            <BarChart3 className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.endedLiveEvents}</div>
-            <p className="text-xs text-muted-foreground mt-1">تغطيات مكتملة</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>الأخبار حسب القسم</CardTitle>
-            <CardDescription>توزيع الأخبار على الأقسام المختلفة</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Object.entries(stats.categoryCounts).map(([category, count]) => (
-                <div key={category} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-primary"></div>
-                    <span className="font-medium">{categoryLabels[category] || category}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-32 bg-secondary rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full"
-                        style={{ width: `${(Number(count) / stats.totalNews) * 100}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-bold w-12 text-left">{count as number}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>النشاط الأخير</CardTitle>
-            <CardDescription>آخر 10 أخبار تم نشرها</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats.recentActivity.map((news: any) => (
-                <div key={news.id} className="flex items-start justify-between border-b pb-3 last:border-0">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-sm line-clamp-2">{news.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(news.created_at).toLocaleDateString('ar-SA', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                  <span className="text-xs bg-secondary px-2 py-1 rounded mr-3">
-                    {categoryLabels[news.category] || news.category}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>ملخص الأداء</CardTitle>
-          <CardDescription>مؤشرات الأداء الرئيسية</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-accent/50 rounded-lg">
-              <TrendingUp className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold">{stats.newsThisMonth}</div>
-              <p className="text-sm text-muted-foreground mt-1">أخبار هذا الشهر</p>
-            </div>
-            <div className="text-center p-6 bg-accent/50 rounded-lg">
-              <Eye className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold">{stats.activeLiveEvents}</div>
-              <p className="text-sm text-muted-foreground mt-1">تغطيات حية نشطة</p>
-            </div>
-            <div className="text-center p-6 bg-accent/50 rounded-lg">
-              <BarChart3 className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold">{Object.keys(stats.categoryCounts).length}</div>
-              <p className="text-sm text-muted-foreground mt-1">أقسام نشطة</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <NewsStatisticsDashboard {...stats} />;
 }

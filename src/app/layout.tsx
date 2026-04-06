@@ -25,22 +25,16 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  keywords: ["نفود", "أخبار السعودية", "أخبار سعودية", "ذكاء اصطناعي", "أخبار عربية", "سياسة", "اقتصاد", "رياضة", "أخبار عاجلة", "تغطية حية", "nfoud", "أخبار المملكة", "أخبار محلية", "أخبار عالمية", "تحليلات سياسية", "تقارير اقتصادية"],
+  keywords: ["نفود", "أخبار السعودية", "أخبار سعودية", "ذكاء اصطناعي", "أخبار عربية", "سياسة", "اقتصاد", "رياضة", "أخبار عاجلة", "تغطية حية", "nfoud"],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
-  applicationName: SITE_NAME,
-  category: 'news',
-  classification: 'News & Media',
   alternates: {
-    canonical: SITE_URL,
     languages: {
       'ar-SA': SITE_URL,
-      'ar': SITE_URL,
     },
     types: {
       'application/rss+xml': `${SITE_URL}/rss.xml`,
-      'application/atom+xml': `${SITE_URL}/rss.xml`,
     },
   },
   formatDetection: {
@@ -48,8 +42,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  verification: {
-    google: 'google-site-verification-code',
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png', sizes: 'any' },
+    ],
+    apple: { url: '/favicon.png', sizes: '512x512' },
   },
   openGraph: {
     type: "website",
@@ -58,12 +55,6 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} - أول شبكة أخبار سعودية بالذكاء الاصطناعي`,
     description: SITE_DESCRIPTION,
-    images: [{
-      url: `${SITE_URL}/nafud-logo.png`,
-      width: 512,
-      height: 512,
-      alt: SITE_NAME,
-    }],
   },
   twitter: {
     card: "summary_large_image",
@@ -71,27 +62,18 @@ export const metadata: Metadata = {
     creator: "@Nfoud_ai",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: [`${SITE_URL}/nafud-logo.png`],
   },
   robots: {
     index: true,
     follow: true,
-    nocache: false,
     googleBot: {
       index: true,
       follow: true,
-      noimageindex: false,
       "max-video-preview": -1,
       "max-image-preview": "large",
       "max-snippet": -1,
     },
   },
-  icons: {
-    icon: '/nafud-logo.png',
-    shortcut: '/favicon.ico',
-    apple: '/nafud-logo.png',
-  },
-  manifest: '/manifest.json',
 };
 
 const organizationSchema = {
@@ -101,9 +83,7 @@ const organizationSchema = {
   "url": SITE_URL,
   "logo": {
     "@type": "ImageObject",
-    "url": `${SITE_URL}/nafud-logo.png`,
-    "width": 512,
-    "height": 512,
+    "url": `${SITE_URL}/favicon.png`,
   },
   "sameAs": [
     "https://x.com/Nfoud_ai",
@@ -117,11 +97,6 @@ const organizationSchema = {
     "name": "Saudi Arabia",
   },
   "inLanguage": "ar",
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "contactType": "customer service",
-    "availableLanguage": ["Arabic", "English"],
-  },
 };
 
 const websiteSchema = {
@@ -135,47 +110,6 @@ const websiteSchema = {
     "@type": "NewsMediaOrganization",
     "name": SITE_NAME,
   },
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": {
-      "@type": "EntryPoint",
-      "urlTemplate": `${SITE_URL}/search?q={search_term_string}`,
-    },
-    "query-input": "required name=search_term_string",
-  },
-};
-
-// Default author schema for E-E-A-T
-const defaultAuthorSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "فريق تحرير نفود",
-  "url": SITE_URL,
-  "logo": {
-    "@type": "ImageObject",
-    "url": `${SITE_URL}/nafud-logo.png`,
-    "width": 512,
-    "height": 512,
-  },
-  "description": "فريق من المحررين والصحفيين المتخصصين في تغطية الأخبار السعودية والعربية",
-  "sameAs": [
-    "https://x.com/Nfoud_ai",
-    "https://www.instagram.com/nfooud.ai/",
-    "https://www.tiktok.com/@nfoud_ai",
-  ],
-  "knowsAbout": [
-    "السياسة السعودية",
-    "الاقتصاد السعودي",
-    "الأخبار العاجلة",
-    "التغطية الإخبارية",
-    "التحليل السياسي",
-    "الشؤون العربية"
-  ],
-  "jobTitle": "فريق التحرير",
-  "worksFor": {
-    "@type": "NewsMediaOrganization",
-    "name": SITE_NAME,
-  },
 };
 
 export default function RootLayout({
@@ -186,13 +120,9 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL || ''} />
-        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL || ''} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="icon" href="/nafud-logo.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/nafud-logo.png" />
-        <meta name="theme-color" content="#1a2332" />
+        <link rel="preconnect" href="https://wqcikbeglxfptnaamnpj.supabase.co" />
+        <link rel="dns-prefetch" href="https://wqcikbeglxfptnaamnpj.supabase.co" />
+        <meta name="msapplication-TileImage" content="/favicon.png" />
       </head>
       <body className={`${cairo.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
@@ -204,10 +134,6 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(defaultAuthorSchema) }}
         />
       </body>
     </html>
