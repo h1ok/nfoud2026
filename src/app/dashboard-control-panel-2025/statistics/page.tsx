@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { supabaseServer } from '@/lib/supabase';
 import NewsStatisticsDashboard from '@/components/NewsStatisticsDashboard';
 
