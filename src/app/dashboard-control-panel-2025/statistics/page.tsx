@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { Suspense } from 'react';
 import { supabaseServer } from '@/lib/supabase';
 import NewsStatisticsDashboard from '@/components/NewsStatisticsDashboard';
 
@@ -201,8 +202,42 @@ async function getStatistics() {
   };
 }
 
-export default async function DashboardStatisticsPage() {
-  const stats = await getStatistics();
+function StatisticsSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-2xl border border-border bg-card p-5">
+            <div className="h-4 w-20 rounded bg-muted mb-3" />
+            <div className="h-8 w-24 rounded bg-muted mb-2" />
+            <div className="h-3 w-16 rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="h-5 w-32 rounded bg-muted mb-6" />
+        <div className="h-64 w-full rounded bg-muted" />
+      </div>
+    </div>
+  );
+}
 
+async function StatisticsContent() {
+  const stats = await getStatistics();
   return <NewsStatisticsDashboard {...stats} />;
+}
+
+export default function DashboardStatisticsPage() {
+  return (
+    <section className="space-y-6">
+      <div>
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground">إحصائيات الأخبار</h2>
+        <p className="mt-2 text-muted-foreground">نظرة شاملة على أداء المحتوى والنشر.</p>
+      </div>
+
+      <Suspense fallback={<StatisticsSkeleton />}>
+        <StatisticsContent />
+      </Suspense>
+    </section>
+  );
 }

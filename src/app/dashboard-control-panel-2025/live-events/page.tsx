@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { revalidatePath, unstable_noStore } from 'next/cache';
 import { Radio, ArrowLeft, Clock3, Pencil, Trash2 } from 'lucide-react';
@@ -304,7 +305,37 @@ function StatusButton({
   );
 }
 
-export default async function DashboardLiveEventsPage({
+function LiveEventsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-4 animate-pulse">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-48 rounded bg-muted" />
+                  <div className="h-4 w-72 rounded bg-muted" />
+                  <div className="flex gap-1.5 mt-3">
+                    <div className="h-6 w-16 rounded-full bg-muted" />
+                    <div className="h-6 w-20 rounded-full bg-muted" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="h-6 w-16 rounded-full bg-muted" />
+              <div className="h-4 w-24 rounded bg-muted" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+async function LiveEventsContent({
   searchParams,
 }: {
   searchParams?: Promise<{ edit?: string; create?: string }>;
@@ -321,20 +352,7 @@ export default async function DashboardLiveEventsPage({
     : liveEvents;
 
   return (
-    <section className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground">الأحداث الحية</h2>
-          <p className="mt-2 text-muted-foreground">تحكم كامل في الأحداث الحية الحالية مع إنشاء يدوي وتحرير سريع.</p>
-        </div>
-        <Link
-          href="/dashboard-control-panel-2025/live-events?create=1"
-          className="inline-flex items-center justify-center rounded-2xl bg-gold px-4 py-3 text-sm font-bold text-primary transition hover:bg-gold/90"
-        >
-          إنشاء بث حي
-        </Link>
-      </div>
-
+    <>
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-border bg-card p-6 shadow-2xl">
@@ -555,6 +573,33 @@ export default async function DashboardLiveEventsPage({
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+export default function DashboardLiveEventsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ edit?: string; create?: string }>;
+}) {
+  return (
+    <section className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">الأحداث الحية</h2>
+          <p className="mt-2 text-muted-foreground">تحكم كامل في الأحداث الحية الحالية مع إنشاء يدوي وتحرير سريع.</p>
+        </div>
+        <Link
+          href="/dashboard-control-panel-2025/live-events?create=1"
+          className="inline-flex items-center justify-center rounded-2xl bg-gold px-4 py-3 text-sm font-bold text-primary transition hover:bg-gold/90"
+        >
+          إنشاء بث حي
+        </Link>
+      </div>
+
+      <Suspense fallback={<LiveEventsSkeleton />}>
+        <LiveEventsContent searchParams={searchParams} />
+      </Suspense>
     </section>
   );
 }
