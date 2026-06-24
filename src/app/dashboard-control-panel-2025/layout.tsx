@@ -2,6 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { LayoutDashboard, Newspaper, Radio, LogOut, ChartColumn } from 'lucide-react';
+import AuthGuard from '@/components/dashboard/AuthGuard';
+import LogoutButton from '@/components/dashboard/LogoutButton';
 
 export const metadata: Metadata = {
   robots: {
@@ -26,6 +28,7 @@ const navItems = [
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-primary text-primary-foreground">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4">
@@ -50,16 +53,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             ))}
             <Link
               href="/"
-              className="inline-flex items-center gap-2 rounded-full border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:bg-destructive/20"
+              className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/15 bg-primary-foreground/5 px-4 py-2 text-sm font-medium transition hover:bg-primary-foreground/10"
             >
               <LogOut size={16} />
               <span>العودة للموقع</span>
             </Link>
+            <LogoutButton />
           </nav>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">{children}</main>
     </div>
+    </AuthGuard>
   );
 }
