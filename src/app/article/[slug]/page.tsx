@@ -5,6 +5,7 @@ import { supabaseServer } from '@/lib/supabase';
 import { News } from '@/types/news';
 import { getCategoryLabel, formatTimeAgo, safeKeywords } from '@/lib/utils';
 import { SITE_URL, SITE_NAME, TWITTER_HANDLE } from '@/lib/constants';
+import { articleSchema, withBreadcrumb } from '@/lib/schema';
 import Navbar from '@/components/Navbar';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Footer from '@/components/Footer';
@@ -164,54 +165,34 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const plainText = (article.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const wordCount = plainText.split(/\s+/).filter(Boolean).length;
 
-  const articleSchema = {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    "headline": article.title,
-    "name": article.title,
-    "description": article.meta_description || article.excerpt || article.title,
-    "image": article.image_url ? {
-      "@type": "ImageObject",
-      "url": article.image_url,
-      "width": 1200,
-      "height": 630,
-    } : { "@type": "ImageObject", "url": `${SITE_URL}/icon.png` },
-    "thumbnailUrl": article.image_url || `${SITE_URL}/icon.png`,
-    "datePublished": article.created_at,
-    "dateModified": article.updated_at || article.created_at,
-    "author": article.editors ? {
-      "@type": "Person",
-      "name": article.editors.name,
-      "jobTitle": article.editors.position || 'محرر',
-      "description": article.editors.bio || undefined,
-      "url": `${SITE_URL}`,
-    } : {
-      "@type": "Organization",
-      "name": SITE_NAME,
-      "url": SITE_URL,
-    },
-    "publisher": {
-      "@type": "NewsMediaOrganization",
-      "name": SITE_NAME,
-      "url": SITE_URL,
-      "logo": { "@type": "ImageObject", "url": `${SITE_URL}/icon.png`, "width": 512, "height": 512 },
-    },
-    "mainEntityOfPage": { "@type": "WebPage", "@id": articleUrl },
-    "url": articleUrl,
-    "articleSection": getCategoryLabel(article.category),
-    "keywords": safeKeywords(article.keywords).join(', ') || undefined,
-    "wordCount": wordCount,
-    "inLanguage": "ar",
-    "isAccessibleForFree": true,
-    "copyrightHolder": { "@type": "Organization", "name": SITE_NAME },
-    "copyrightYear": new Date(article.created_at || Date.now()).getFullYear(),
-  };
+  const categoryLabel = getCategoryLabel(article.category);
+  const articleLd = withBreadcrumb(
+    articleSchema({
+      title: article.title,
+      description: article.meta_description || article.excerpt || article.title,
+      url: articleUrl,
+      imageUrl: article.image_url,
+      datePublished: article.created_at,
+      dateModified: article.updated_at || article.created_at,
+      authorName: article.editors?.name,
+      authorJobTitle: article.editors?.position,
+      authorBio: article.editors?.bio,
+      sectionLabel: categoryLabel,
+      keywords: safeKeywords(article.keywords),
+      wordCount,
+    }),
+    [
+      { name: 'الرئيسية', url: SITE_URL },
+      { name: categoryLabel, url: `${SITE_URL}${getCategoryPath(article.category)}` },
+      { name: article.title, url: articleUrl },
+    ]
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
       />
 
       <Navbar />

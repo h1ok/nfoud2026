@@ -5,6 +5,7 @@ import { supabaseServer } from '@/lib/supabase';
 import { LiveEvent } from '@/types/news';
 import { formatDate, getCategoryLabel } from '@/lib/utils';
 import { SITE_URL, SITE_NAME, TWITTER_HANDLE } from '@/lib/constants';
+import { liveBlogSchema, breadcrumbSchema, type LiveUpdateInput } from '@/lib/schema';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Radio, Clock } from 'lucide-react';
@@ -128,9 +129,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       type: 'article',
       url: liveEventUrl,
-      title: event.title,
+      title: `${event.title} - تغطية مباشرة`,
       description,
       images: event.main_image_url ? [{ url: event.main_image_url }] : [],
+      publishedTime: event.created_at,
+      modifiedTime: event.updated_at || event.created_at,
+      section: getCategoryLabel(event.category),
       siteName: SITE_NAME,
       locale: 'ar_SA',
     },
@@ -159,8 +163,42 @@ export default async function LiveEventPage({ params }: { params: Promise<{ id: 
   const isActive = event.status === 'active';
   const heroImage = event.main_image_url || updates.find((update) => update.source_news_image_url)?.source_news_image_url || null;
 
+  const liveEventUrl = `${SITE_URL}/live/${event.id}`;
+  const categoryLabel = getCategoryLabel(event.category);
+  const liveLd = liveBlogSchema({
+    title: event.title,
+    description: event.summary || event.title,
+    url: liveEventUrl,
+    imageUrl: heroImage,
+    datePublished: event.created_at,
+    dateModified: event.updated_at || event.created_at,
+    isActive,
+    sectionLabel: categoryLabel,
+    updates: updates.map<LiveUpdateInput>((update) => ({
+      id: update.id,
+      content: update.content,
+      created_at: update.created_at,
+    })),
+  });
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    ...breadcrumbSchema([
+      { name: 'الرئيسية', url: SITE_URL },
+      { name: 'التغطيات الحية', url: `${SITE_URL}/live` },
+      { name: event.title, url: liveEventUrl },
+    ]),
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(liveLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
@@ -221,6 +259,7 @@ export default async function LiveEventPage({ params }: { params: Promise<{ id: 
                   {updates.map((update, index) => (
                     <div 
                       key={update.id}
+                      id={`update-${update.id}`}
                       className={`border-r-4 pr-6 py-4 ${
                         index === 0 && isActive
                           ? 'border-destructive bg-destructive/5'

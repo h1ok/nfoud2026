@@ -3,6 +3,7 @@ import { Cairo } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
+import { siteGraph } from "@/lib/schema";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -76,41 +77,6 @@ export const metadata: Metadata = {
   },
 };
 
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": "NewsMediaOrganization",
-  "name": SITE_NAME,
-  "url": SITE_URL,
-  "logo": {
-    "@type": "ImageObject",
-    "url": `${SITE_URL}/favicon.png`,
-  },
-  "sameAs": [
-    "https://x.com/Nfoud_ai",
-    "https://www.instagram.com/nfooud.ai/",
-    "https://www.tiktok.com/@nfoud_ai",
-  ],
-  "description": SITE_DESCRIPTION,
-  "foundingDate": "2025",
-  "areaServed": {
-    "@type": "Country",
-    "name": "Saudi Arabia",
-  },
-  "inLanguage": "ar",
-};
-
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": SITE_NAME,
-  "url": SITE_URL,
-  "description": SITE_DESCRIPTION,
-  "inLanguage": "ar",
-  "publisher": {
-    "@type": "NewsMediaOrganization",
-    "name": SITE_NAME,
-  },
-};
 
 export default function RootLayout({
   children,
@@ -129,11 +95,7 @@ export default function RootLayout({
         <Toaster position="top-center" richColors />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteGraph()) }}
         />
       </body>
     </html>

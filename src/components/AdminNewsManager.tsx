@@ -26,6 +26,7 @@ type EditorItem = {
   id: string;
   name: string;
   position: string | null;
+  categories?: string[];
 };
 
 type ApiResponse = {
@@ -132,6 +133,26 @@ export default function AdminNewsManager() {
     [items, selectedIds]
   );
 
+  const categoryLabel = useMemo(
+    () => categories.find((category) => category.value === editForm.category)?.label ?? editForm.category,
+    [editForm.category]
+  );
+
+  const editorsForCategory = useMemo(
+    () =>
+      editors.filter(
+        (editor) => !editor.categories?.length || editor.categories.includes(editForm.category)
+      ),
+    [editors, editForm.category]
+  );
+
+  const selectedEditorMismatch = useMemo(() => {
+    if (!editForm.editor_id) return false;
+    const selected = editors.find((editor) => editor.id === editForm.editor_id);
+    if (!selected || !selected.categories?.length) return false;
+    return !selected.categories.includes(editForm.category);
+  }, [editors, editForm.editor_id, editForm.category]);
+
   function toggleSelectAll() {
     if (allSelected) {
       setSelectedIds([]);
@@ -233,6 +254,11 @@ export default function AdminNewsManager() {
 
   async function handleSaveEdit() {
     if (!editingItem) return;
+
+    if (selectedEditorMismatch) {
+      window.alert('الكاتب المختار غير متخصص في قسم المقال. اختر كاتباً مناسباً قبل الحفظ.');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -448,10 +474,16 @@ export default function AdminNewsManager() {
                     <label className="mb-2 block text-sm font-medium text-foreground">الكاتب</label>
                     <select value={editForm.editor_id} onChange={(e) => setEditForm((current) => ({ ...current, editor_id: e.target.value }))} className="w-full rounded-xl border border-border bg-background px-4 py-3 outline-none focus:border-gold">
                       <option value="">بدون كاتب</option>
-                      {editors.map((editor) => (
+                      {editorsForCategory.map((editor) => (
                         <option key={editor.id} value={editor.id}>{editor.name}{editor.position ? ` - ${editor.position}` : ''}</option>
                       ))}
                     </select>
+                    {editorsForCategory.length === 0 && (
+                      <p className="mt-2 text-xs text-destructive">لا يوجد كاتب متخصص في هذا القسم. أضِف تخصصاً للكاتب أولاً.</p>
+                    )}
+                    {selectedEditorMismatch && (
+                      <p className="mt-2 text-xs text-destructive">الكاتب المختار غير متخصص في قسم «{categoryLabel}». اختر كاتباً مناسباً.</p>
+                    )}
                   </div>
 
                   <div className="md:col-span-2">

@@ -21,6 +21,44 @@ async function getRandomEditorId(): Promise<string> {
   return crypto.randomUUID();
 }
 
+// Picks a random editor whose specialization (editor_categories) matches the
+// article category, so a political article is never assigned to a sports writer.
+// Falls back to any editor if no specialized editor exists.
+async function getEditorIdForCategory(category: string): Promise<string> {
+  const normalizedCategory = (category || '').trim().toLowerCase();
+
+  if (normalizedCategory) {
+    const { data: mappings, error } = await supabaseAdmin
+      .from('editor_categories')
+      .select('*');
+
+    if (!error && mappings && mappings.length > 0) {
+      const matchingEditorIds = mappings
+        .filter((row: Record<string, unknown>) =>
+          Object.entries(row).some(
+            ([key, value]) =>
+              key !== 'id' &&
+              key !== 'editor_id' &&
+              key !== 'created_at' &&
+              typeof value === 'string' &&
+              value.trim().toLowerCase() === normalizedCategory
+          )
+        )
+        .map((row: Record<string, unknown>) => row.editor_id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+
+      const uniqueEditorIds = Array.from(new Set(matchingEditorIds));
+
+      if (uniqueEditorIds.length > 0) {
+        const randomIndex = Math.floor(Math.random() * uniqueEditorIds.length);
+        return uniqueEditorIds[randomIndex];
+      }
+    }
+  }
+
+  return getRandomEditorId();
+}
+
 const AR_TO_EN: Record<string, string> = {
   'ا': 'a', 'أ': 'a', 'إ': 'e', 'آ': 'aa', 'ب': 'b', 'ت': 't', 'ث': 'th',
   'ج': 'j', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'th', 'ر': 'r', 'ز': 'z',
@@ -125,7 +163,7 @@ export async function POST(request: NextRequest) {
       canonical_url: body.canonical_url || null,
       key_points: seoData.key_points,
       created_at: new Date().toISOString(),
-      editor_id: body.editor_id || await getRandomEditorId(),
+      editor_id: body.editor_id || await getEditorIdForCategory(body.category || 'local'),
       location: body.location || null,
     };
 
