@@ -39,7 +39,9 @@ type ApiResponse = {
   };
 };
 
-const categories = [
+type CategoryOption = { value: string; label: string };
+
+const fallbackCategories: CategoryOption[] = [
   { value: 'politics', label: 'سياسية' },
   { value: 'economy', label: 'اقتصادية' },
   { value: 'local', label: 'محلية' },
@@ -51,6 +53,7 @@ const emptyPagination = { page: 1, limit: 100, total: 0, totalPages: 1 };
 export default function AdminNewsManager() {
   const [items, setItems] = useState<AdminNewsItem[]>([]);
   const [editors, setEditors] = useState<EditorItem[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>(fallbackCategories);
   const [pagination, setPagination] = useState(emptyPagination);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
@@ -116,6 +119,28 @@ export default function AdminNewsManager() {
   useEffect(() => {
     fetchEditors();
   }, [fetchEditors]);
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        const response = await fetch('/api/categories', { cache: 'no-store' });
+        const data = (await response.json()) as { items?: { slug: string; name: string }[] };
+
+        if (!response.ok || !data.items?.length) return;
+        if (!active) return;
+
+        setCategories(data.items.map((category) => ({ value: category.slug, label: category.name })));
+      } catch (error) {
+        console.error(error);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!isEditModalOpen) return;

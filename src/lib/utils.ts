@@ -53,12 +53,28 @@ export function safeKeywords(keywords: unknown): string[] {
   return [];
 }
 
+const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
+  politics: 'سياسة',
+  economy: 'اقتصاد',
+  local: 'محليات',
+  sports: 'رياضة',
+};
+
+// Mutable registry shared by both server and client module instances.
+// Warmed on the server by getCategories() and on the client by CategoryLabelsInit.
+let CATEGORY_LABELS: Record<string, string> = { ...DEFAULT_CATEGORY_LABELS };
+
+export function setCategoryLabels(labels: Record<string, string>): void {
+  CATEGORY_LABELS = { ...DEFAULT_CATEGORY_LABELS, ...labels };
+}
+
 export function getCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    politics: 'سياسة',
-    economy: 'اقتصاد',
-    local: 'محليات',
-    sports: 'رياضة',
-  };
-  return labels[category] || category;
+  return CATEGORY_LABELS[category] || category;
+}
+
+const STATIC_CATEGORY_ROUTES = new Set(['politics', 'economy', 'local', 'sports']);
+
+export function getCategoryPath(category: string): string {
+  if (!category) return '/';
+  return STATIC_CATEGORY_ROUTES.has(category) ? `/${category}` : `/category/${category}`;
 }

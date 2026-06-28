@@ -3,9 +3,17 @@ import Image from 'next/image';
 import { SITE_NAME } from '@/lib/constants';
 import { Instagram, Mail } from 'lucide-react';
 import { RiTwitterXFill, RiSnapchatFill, RiTiktokFill } from 'react-icons/ri';
+import { getCategories } from '@/lib/categories';
+import { getCategoryPath } from '@/lib/utils';
 
-export default function Footer() {
+export default async function Footer() {
   const currentYear = new Date().getFullYear();
+  const categories = await getCategories();
+  const quickLinks = [
+    { name: 'الرئيسية', path: '/' },
+    ...categories.map((category) => ({ name: category.name, path: getCategoryPath(category.slug) })),
+    { name: 'الأحداث الحية', path: '/live' },
+  ];
 
   return (
     <footer className="bg-primary text-primary-foreground border-t border-gold/20 mt-12 md:mt-20">
@@ -43,14 +51,7 @@ export default function Footer() {
           <nav aria-label="روابط القائمة الرئيسية">
             <h3 className="text-gold font-bold mb-6 text-xl">روابط سريعة</h3>
             <ul className="space-y-3">
-              {[
-                { name: 'الرئيسية', path: '/' },
-                { name: 'سياسية', path: '/politics' },
-                { name: 'اقتصادية', path: '/economy' },
-                { name: 'محلية', path: '/local' },
-                { name: 'رياضية', path: '/sports' },
-                { name: 'الأحداث الحية', path: '/live' },
-              ].map((item) => (
+              {quickLinks.map((item) => (
                 <li key={item.path}>
                   <Link href={item.path} className="hover-gold transition-all text-primary-foreground/80 hover:text-gold flex items-center gap-2 group">
                     <span className="w-0 group-hover:w-2 h-0.5 bg-gold transition-all duration-300" aria-hidden="true"></span>

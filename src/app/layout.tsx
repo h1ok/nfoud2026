@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
 import { siteGraph } from "@/lib/schema";
+import { getCategories } from "@/lib/categories";
+import CategoryLabelsInit from "@/components/CategoryLabelsInit";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -78,11 +80,13 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const categories = await getCategories();
+
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
@@ -91,6 +95,7 @@ export default function RootLayout({
         <meta name="msapplication-TileImage" content="/favicon.png" />
       </head>
       <body className={`${cairo.variable} font-sans antialiased`} suppressHydrationWarning>
+        <CategoryLabelsInit categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} />
         {children}
         <Toaster position="top-center" richColors />
         <script

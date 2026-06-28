@@ -6,6 +6,9 @@ import { Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { getCategoryPath } from '@/lib/utils';
+
+type CategoryLite = { slug: string; name: string };
 
 const NavbarSearch = dynamic(() => import('@/components/NavbarSearch'), {
   ssr: true,
@@ -14,19 +17,29 @@ const NavbarSearch = dynamic(() => import('@/components/NavbarSearch'), {
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [categories, setCategories] = useState<CategoryLite[]>([]);
   const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetch('/api/categories', { cache: 'no-store' });
+        const data = (await response.json()) as { items?: CategoryLite[] };
+        if (response.ok && data.items) setCategories(data.items);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    })();
+  }, []);
+
   const navItems = [
     { name: "الرئيسية", path: "/" },
     { name: "🔴 تغطيات حية", path: "/live" },
-    { name: "سياسية", path: "/politics" },
-    { name: "اقتصادية", path: "/economy" },
-    { name: "محلية", path: "/local" },
-    { name: "رياضية", path: "/sports" },
+    ...categories.map((category) => ({ name: category.name, path: getCategoryPath(category.slug) })),
     { name: "من نحن", path: "/about" },
   ];
 

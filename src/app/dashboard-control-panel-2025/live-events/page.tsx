@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { supabaseServer } from '@/lib/supabase';
 import { backfillLiveEventUpdates } from '@/lib/live-events';
 import { LiveEventKeywordAutoSuggest } from '@/components/LiveEventKeywordAutoSuggest';
-import { CATEGORIES } from '@/lib/constants';
+import { getCategories } from '@/lib/categories';
 
 function freshClient() {
   return createClient(
@@ -30,7 +30,6 @@ function parseKeywordsInput(value: string) {
     .filter(Boolean);
 }
 
-const categoryOptions = Object.entries(CATEGORIES);
 
 interface AdminLiveEvent {
   id: string;
@@ -350,6 +349,8 @@ async function LiveEventsContent({
   const allLiveEvents = editingEvent && !liveEvents.some((event) => event.id === editingEvent.id)
     ? [editingEvent, ...liveEvents]
     : liveEvents;
+  const categories = await getCategories();
+  const categoryOptions = categories.map((c) => [c.slug, c.name] as const);
 
   return (
     <>

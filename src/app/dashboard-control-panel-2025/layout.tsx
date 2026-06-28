@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { LayoutDashboard, Newspaper, Radio, LogOut, ChartColumn } from 'lucide-react';
+import { LayoutDashboard, Newspaper, Radio, LogOut, ChartColumn, Users, Tags } from 'lucide-react';
 import AuthGuard from '@/components/dashboard/AuthGuard';
 import LogoutButton from '@/components/dashboard/LogoutButton';
 
@@ -22,6 +22,8 @@ export const metadata: Metadata = {
 const navItems = [
   { href: '/dashboard-control-panel-2025', label: 'الرئيسية', icon: LayoutDashboard },
   { href: '/dashboard-control-panel-2025/news', label: 'إدارة الأخبار', icon: Newspaper },
+  { href: '/dashboard-control-panel-2025/editors', label: 'إدارة الكُتّاب', icon: Users },
+  { href: '/dashboard-control-panel-2025/categories', label: 'إدارة التصنيفات', icon: Tags },
   { href: '/dashboard-control-panel-2025/statistics', label: 'الإحصائيات', icon: ChartColumn },
   { href: '/dashboard-control-panel-2025/live-events', label: 'الأحداث الحية', icon: Radio },
 ];

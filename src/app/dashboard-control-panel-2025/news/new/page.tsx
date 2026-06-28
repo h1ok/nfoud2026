@@ -17,11 +17,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const CATEGORY_OPTIONS = [
-  { value: 'politics', label: 'سياسة' },
-  { value: 'economy', label: 'اقتصاد' },
-  { value: 'local', label: 'محليات' },
-  { value: 'sports', label: 'رياضة' },
+type CategoryItem = { slug: string; name: string };
+
+const DEFAULT_CATEGORY_OPTIONS: CategoryItem[] = [
+  { slug: 'politics', name: 'سياسة' },
+  { slug: 'economy', name: 'اقتصاد' },
+  { slug: 'local', name: 'محليات' },
+  { slug: 'sports', name: 'رياضة' },
 ];
 
 const STORAGE_BUCKET = 'news-images';
@@ -38,6 +40,7 @@ export default function NewNewsPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editors, setEditors] = useState<EditorItem[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>(DEFAULT_CATEGORY_OPTIONS);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -59,6 +62,18 @@ export default function NewNewsPage() {
         if (response.ok) setEditors(data.items ?? []);
       } catch (error) {
         console.error('Error loading editors:', error);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetch('/api/categories', { cache: 'no-store' });
+        const data = (await response.json()) as { items?: CategoryItem[] };
+        if (response.ok && data.items?.length) setCategories(data.items);
+      } catch (error) {
+        console.error('Error loading categories:', error);
       }
     })();
   }, []);
@@ -188,8 +203,8 @@ export default function NewNewsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  {categories.map((option) => (
+                    <SelectItem key={option.slug} value={option.slug}>{option.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -203,6 +203,29 @@ export function liveBlogSchema(input: LiveBlogSchemaInput) {
   };
 }
 
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+// FAQPage schema enables FAQ rich results in Google search.
+export function faqSchema(items: FaqItem[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${SITE_URL}/#faq`,
+    inLanguage: 'ar',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  };
+}
+
 // Helper to wrap a schema object into a graph with breadcrumb attached.
 export function withBreadcrumb<T extends Record<string, unknown>>(
   schema: T,

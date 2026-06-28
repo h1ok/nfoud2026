@@ -1,26 +1,30 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Newspaper, Radio, ArrowLeft, ChartColumn } from 'lucide-react';
+import { Newspaper, Radio, ArrowLeft, ChartColumn, CalendarClock } from 'lucide-react';
 import { supabaseServer } from '@/lib/supabase';
 
 async function getStats() {
-  const [{ count: newsCount }, { count: liveEventsCount }, { data: latestNews }] = await Promise.all([
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [{ count: newsCount }, { count: liveEventsCount }, { data: latestNews }, { count: newsLast7Days }] = await Promise.all([
     supabaseServer.from('news').select('*', { count: 'exact', head: true }),
     supabaseServer.from('live_events').select('*', { count: 'exact', head: true }),
     supabaseServer.from('news').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabaseServer.from('news').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
   ]);
 
   return {
     newsCount: newsCount ?? 0,
     liveEventsCount: liveEventsCount ?? 0,
     latestNewsDate: latestNews?.created_at ?? null,
+    newsLast7Days: newsLast7Days ?? 0,
   };
 }
 
 function StatsCardsSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {[1, 2, 3].map((i) => (
+      {[1, 2, 3, 4].map((i) => (
         <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-sm animate-pulse">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 space-y-3">
@@ -73,6 +77,23 @@ async function StatsCards() {
         </div>
         <div className="mt-6 inline-flex items-center gap-2 text-sm text-gold font-medium">
           <span>عرض الإحصائيات</span>
+          <ArrowLeft size={16} />
+        </div>
+      </Link>
+
+      <Link href="/dashboard-control-panel-2025/news" className="rounded-2xl border border-border bg-card p-6 shadow-sm transition hover:border-gold/50 hover:shadow-md">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">المقالات خلال 7 أيام</p>
+            <h3 className="mt-2 text-3xl font-bold text-foreground">{stats.newsLast7Days}</h3>
+            <p className="mt-4 text-foreground font-medium">النشاط الأسبوعي</p>
+          </div>
+          <div className="rounded-2xl bg-secondary p-3 text-gold">
+            <CalendarClock size={28} />
+          </div>
+        </div>
+        <div className="mt-6 inline-flex items-center gap-2 text-sm text-gold font-medium">
+          <span>عرض الأخبار</span>
           <ArrowLeft size={16} />
         </div>
       </Link>

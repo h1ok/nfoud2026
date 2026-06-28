@@ -6,6 +6,8 @@ import LiveEventCard from '@/components/LiveEventCard';
 import NewsTickerWrapper from '@/components/NewsTickerWrapper';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import FaqSection from '@/components/FaqSection';
+import { faqSchema, FaqItem } from '@/lib/schema';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, TWITTER_HANDLE } from '@/lib/constants';
 import { TrendingUp, Newspaper, Globe, Trophy, ChevronLeft, Radio } from 'lucide-react';
 import Link from 'next/link';
@@ -113,6 +115,34 @@ const categories = [
 ];
 
 const iconMap: Record<string, any> = { Globe, TrendingUp, Newspaper, Trophy };
+
+const faqItems: FaqItem[] = [
+  {
+    question: 'ما معنى كلمة "نفود"؟',
+    answer:
+      'كلمة "نفود" تعني في اللغة العربية الصحراء الرملية الواسعة ذات الكثبان المرتفعة، وقد اخترنا هذا الاسم ليكون عنواناً لشبكتنا الإخبارية لأنه يرمز إلى الأصالة السعودية والامتداد والاتساع، تماماً كما تسعى "شبكة نفود الإخبارية" (nfoud.com) لتغطية الأخبار من كل أنحاء المملكة والعالم العربي.',
+  },
+  {
+    question: 'ما هو النفود؟',
+    answer:
+      'النفود هو نوع من الصحاري الرملية المعروفة في شبه الجزيرة العربية، وأشهرها صحراء النفود الكبير في شمال المملكة العربية السعودية، وتتميز بكثبانها الرملية الحمراء الشاهقة. وقد استلهمت "شبكة نفود الإخبارية" اسمها من هذا المعلم الجغرافي السعودي العريق لتقدّم محتوى إخبارياً سعودي الهوية مدعوماً بالذكاء الاصطناعي.',
+  },
+  {
+    question: 'ما هي شبكة نفود الإخبارية؟',
+    answer:
+      'شبكة نفود الإخبارية (nfoud.com) هي أول شبكة أخبار سعودية مدعومة بالذكاء الاصطناعي، تقدّم آخر الأخبار والتحليلات السياسية والاقتصادية والمحلية والرياضية من المملكة العربية السعودية والعالم العربي، مع تغطيات حية على مدار الساعة تجمع بين الموثوقية الصحفية وتقنيات الذكاء الاصطناعي.',
+  },
+  {
+    question: 'كيف شكل النفود؟',
+    answer:
+      'يتميّز النفود بكثبانه الرملية الحمراء الواسعة والمتموّجة التي تمتد على مساحات شاسعة، وتعدّ من أجمل التضاريس الصحراوية في المملكة العربية السعودية. ونحن في شبكة نفود الإخبارية نستلهم من هذا الامتداد والجمال رؤيتنا في تقديم تغطية إخبارية شاملة وعصرية.',
+  },
+  {
+    question: 'هل أخبار شبكة نفود موثوقة؟',
+    answer:
+      'نعم، تحرص شبكة نفود الإخبارية على تقديم أخبار موثوقة ودقيقة من مصادر معتمدة، حيث يجمع فريق التحرير بين الخبرة الصحفية وتقنيات الذكاء الاصطناعي لمراجعة المحتوى والتأكد من مصداقيته قبل نشره عبر الموقع nfoud.com.',
+  },
+];
 
 export default async function Home() {
   const [featuredNews, liveEvents] = await Promise.all([
@@ -319,9 +349,17 @@ export default async function Home() {
             <p className="text-xs md:text-sm text-muted-foreground">كل ما يخص الرياضة</p>
           </Link>
         </section>
+
+        {/* FAQ Section */}
+        <FaqSection items={faqItems} />
       </main>
 
       <Footer />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqItems)) }}
+      />
     </div>
   );
 }
