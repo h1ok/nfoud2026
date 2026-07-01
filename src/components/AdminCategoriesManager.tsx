@@ -22,6 +22,7 @@ export default function AdminCategoriesManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
 
@@ -29,9 +30,10 @@ export default function AdminCategoriesManager() {
     setLoading(true);
     try {
       const response = await fetch('/api/admin/categories', { cache: 'no-store' });
-      const data = (await response.json()) as { items?: CategoryItem[]; error?: string };
+      const data = (await response.json()) as { items?: CategoryItem[]; error?: string; warning?: string };
       if (!response.ok) throw new Error(data?.error || 'Failed');
       setCategories(data.items ?? []);
+      setWarning(data.warning ?? '');
     } catch (err) {
       console.error(err);
       setError('فشل تحميل التصنيفات. تأكد من إنشاء جدول categories في Supabase.');
@@ -114,7 +116,14 @@ export default function AdminCategoriesManager() {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+    <div className="space-y-6">
+      {warning && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+          {warning}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
       {/* Form */}
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm h-fit">
         <div className="mb-4 flex items-center gap-2 text-foreground">
@@ -256,6 +265,7 @@ export default function AdminCategoriesManager() {
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

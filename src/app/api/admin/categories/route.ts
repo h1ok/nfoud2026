@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase';
+import { DEFAULT_CATEGORIES } from '@/lib/categories';
 
 export const dynamic = 'force-dynamic';
+
+// Postgres error code when a relation (table) does not exist.
+const UNDEFINED_TABLE = '42P01';
 
 const RESERVED_SLUGS = new Set(['live', 'about', 'contact', 'authors', 'article', 'all-news', 'auth', 'api', 'category', 'dashboard-control-panel-2025']);
 
@@ -22,6 +26,20 @@ export async function GET() {
     .order('sort_order', { ascending: true });
 
   if (error) {
+    if (error.code === UNDEFINED_TABLE) {
+      console.warn('categories table missing; returning defaults');
+      return NextResponse.json({
+        items: DEFAULT_CATEGORIES.map((c) => ({
+          id: c.slug,
+          slug: c.slug,
+          name: c.name,
+          description: null,
+          sort_order: c.sort_order ?? 0,
+        })),
+        warning: 'جدول categories غير موجود في قاعدة البيانات. شغّل ملف categories-setup.sql في Supabase لتفعيل الإضافة والتعديل والحذف.',
+      });
+    }
+
     console.error('Admin categories GET failed:', error);
     return NextResponse.json({ error: 'فشل جلب التصنيفات' }, { status: 500 });
   }
