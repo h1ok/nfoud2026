@@ -26,7 +26,7 @@ export async function GET() {
       <description><![CDATA[${article.excerpt || ''}]]></description>
       <pubDate>${new Date(article.created_at).toUTCString()}</pubDate>
       <category>${article.category}</category>
-      ${article.image_url ? `<enclosure url="${article.image_url}" type="image/jpeg" />` : ''}
+      ${article.image_url ? `<enclosure url="${article.image_url}" length="0" type="image/jpeg" />` : ''}
     </item>
     `).join('')}
   </channel>
