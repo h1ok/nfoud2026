@@ -48,14 +48,17 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon.png", type: "image/png" },
-      { url: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.ico", type: "image/x-icon", sizes: "any" },
+      { url: "/favicon-192x192.png", type: "image/png", sizes: "192x192" },
+      { url: "/favicon.png", type: "image/png", sizes: "48x48" },
+      { url: "/favicon.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon.png", type: "image/png", sizes: "16x16" },
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" },
     ],
   },
+  manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     locale: "ar_SA",
@@ -97,6 +100,21 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://wqcikbeglxfptnaamnpj.supabase.co" />
         <link rel="dns-prefetch" href="https://wqcikbeglxfptnaamnpj.supabase.co" />
+
+        {/* SERP/Browser icons (explicit) */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+
+        <meta name="theme-color" content="#1a2332" />
+        <link rel="mask-icon" href="/favicon.png" color="#1a2332" />
+
         <meta name="msapplication-TileImage" content="/favicon.png" />
       </head>
       <body className={`${cairo.variable} font-sans antialiased`} suppressHydrationWarning>
