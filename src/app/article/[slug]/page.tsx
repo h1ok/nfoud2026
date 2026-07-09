@@ -150,11 +150,19 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   let sanitizedContent = '';
   try {
     sanitizedContent = sanitizeHtml(article.content || '', {
-      allowedTags: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'img', 'style'],
+      allowedTags: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'blockquote', 'img', 'figure', 'figcaption'],
       allowedAttributes: {
         a: ['href', 'target', 'rel'],
-        img: ['src', 'alt', 'class', 'style'],
-        '*': ['class', 'style'],
+        img: ['src', 'alt', 'width', 'height', 'class'],
+        '*': ['class'],
+      },
+      transformTags: {
+        a: (tagName, attribs) => ({
+          tagName,
+          attribs: attribs.target === '_blank'
+            ? { ...attribs, rel: 'noopener noreferrer' }
+            : attribs,
+        }),
       },
     });
   } catch (e) {
