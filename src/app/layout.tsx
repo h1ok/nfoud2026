@@ -33,6 +33,7 @@ export const metadata: Metadata = {
   creator: SITE_NAME,
   publisher: SITE_NAME,
   alternates: {
+    canonical: SITE_URL,
     languages: {
       'ar-SA': SITE_URL,
     },
